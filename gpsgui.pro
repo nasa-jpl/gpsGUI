@@ -37,6 +37,7 @@ include(qfi/qfi.pri)
 
 !linux:SOURCES += ../qcustomplot/qcustomplot.cpp
 !linux:HEADERS += ../qcustomplot/qcustomplot.h
+!linux:INCLUDEPATH += ../qcustomplot
 
 # Default rules for deployment.
 qnx: target.path = /tmp/$${TARGET}/bin
