@@ -102,6 +102,8 @@ void GpsGui::receiveGPSMessage(gpsMessage m)
     {
         this->m = m;
     } else {
+        ui->statusDecodeOkLED->setState(QLedLabel::StateError);
+        ui->statusDecodeOkLabel->setText("NG");
         return;
     }
 
