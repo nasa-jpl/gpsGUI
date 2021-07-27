@@ -45,6 +45,7 @@ struct gpsMessage {
 
     bool validDecode;
     uint32_t numberDropped = 0;
+    char lastDecodeErrorMessage[64];
 
     // Header:
     messageKinds mType;
@@ -173,7 +174,9 @@ struct gpsMessage {
     dword INSuserStatus;
     bool haveINSUserStatus;
 
-    // Mystery Data at Bit 21 (12 bytes)
+    // Bits 18, 19, and 20 have never been received
+
+    // Heave Surge Sway data (bit 21):
     float realtime_heave_speed;
     float surge_speed;
     float sway_speed;
@@ -399,6 +402,8 @@ private:
     float makeFloat(QByteArray, uint16_t startPos); // IEEE 32 bit float
     double makeDouble(QByteArray, uint16_t startPos); // IEEE 64 bit float
 
+    void copyQStringToCharArray(char *array, QString s);
+
     unsigned char getBit(dword d, unsigned char bit);
 
 public:
@@ -417,6 +422,7 @@ public:
     // Utility Functions:
     QString debugString();
     void debugThis();
+    void printMessage(gpsMessage g);
     void printMessage();
     void printGNSSInfo(int num);
     void printBinary(dword data);

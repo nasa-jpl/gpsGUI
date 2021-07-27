@@ -48,11 +48,19 @@ void gpsBinaryReader::initialize()
 
 void gpsBinaryReader::processData()
 {
+    copyQStringToCharArray( m.lastDecodeErrorMessage, QString("NONE") );
     detMsgType();
     m.protoVers = rawData.at(2);
+
+    bool foundErrors = false;
+    m.validDecode = false;
+    decodeInvalid = true;
+
     if(m.mType != msgIX_outputNav)
     {
         m.validDecode = false;
+        decodeInvalid = true;
+        copyQStringToCharArray( m.lastDecodeErrorMessage, QString("UNSUPPORTED MSG TYPE") );
         return;
     }
 
@@ -72,6 +80,8 @@ void gpsBinaryReader::processData()
     default:
         // Invalid data
         m.validDecode = false;
+        decodeInvalid = true;
+        copyQStringToCharArray( m.lastDecodeErrorMessage, QString("UNK PROTO  ") );
         return;
         break;
     }
@@ -227,10 +237,12 @@ void gpsBinaryReader::processData()
 
     // exteNDED Nav Data Blocks:
 
-    if(m.extendedNavDataBlockBitmask != 0x00000007)
+    if( (m.extendedNavDataBlockBitmask != 0x00000007) && ( m.extendedNavDataBlockBitmask!= 0x00000000) )
     {
+        foundErrors = true;
         decodeInvalid = true;
         m.validDecode = false;
+        copyQStringToCharArray( m.lastDecodeErrorMessage, QString("UNK Extended Nav Data  ") );
         qDebug() << "WARNING: Invalid decode at count " << m.counter << ", extended nav data found: " << QString("0x%1").arg(m.extendedNavDataBlockBitmask, 8, 16, QChar('0'));
     }
 
@@ -282,7 +294,7 @@ void gpsBinaryReader::processData()
     } else {
         if(oldCounter+1 != m.counter)
         {
-            qDebug() << __PRETTY_FUNCTION__ << "Warning: Dropped " << m.counter-oldCounter << " GPS messages.";
+            qDebug() << __PRETTY_FUNCTION__ << "Warning: Dropped " << m.counter-oldCounter << " GPS messages at counter " << m.counter;
             m.numberDropped = m.counter-oldCounter;
         } else {
             m.numberDropped = 0;
@@ -291,43 +303,52 @@ void gpsBinaryReader::processData()
 
     getMessageSum();
 
-    uint32_t oldPos = dataPos;
+    uint32_t oldPos = dataPos; // retain previous position in case it is needed later.
     m.claimedMessageSum = makeDWord(rawData, rawData.length() - 4);
 
     (void)oldPos;
 
-    if(m.claimedMessageSum == messageSum)
+    if(m.claimedMessageSum != messageSum)
     {
-        decodeInvalid = false;
-        m.validDecode = true;
-    } else {
+        copyQStringToCharArray( m.lastDecodeErrorMessage, QString("BAD Checksum  ") );
         qDebug() << "Warning: invalid checksum in message with counter " << m.counter << ", message checksum: " << m.claimedMessageSum << ", calculated checksum: " << messageSum;
         decodeInvalid = true;
         m.validDecode = false;
+        foundErrors = true;
     }
 
     // A little debug checking:
-    if(m.navDataBlockBitmask != 0x7fe3ffff)
+//    if(m.navDataBlockBitmask != 0x7fe3ffff)
+//    {
+//        qDebug() << "Navigation data block bitmask: counter = " << m.counter;
+//        printBinary(m.navDataBlockBitmask);
+//    }
+
+//    if(m.extendedNavDataBlockBitmask != 0x00000007)
+//    {
+//        qDebug() << "Extended data block bitmask: counter = " << m.counter;
+//        printBinary(m.extendedNavDataBlockBitmask);
+//    }
+
+//    if(m.externDataBitMask != 0)
+//    {
+//        qDebug() << "External sensor bitmask: counter = " << m.counter;
+//        printBinary(m.externDataBitMask);
+//        printMessage();
+
+//    }
+
+    // HERE is where we place the final Good / No-Good into the message:
+    if(foundErrors)
     {
-        qDebug() << "Navigation data block bitmask: counter = " << m.counter;
-        printBinary(m.navDataBlockBitmask);
+        qDebug() << "Found errors at counter: " << m.counter;
+        m.validDecode = false;
+        decodeInvalid = true;
+    } else {
+        //qDebug() << "Did not find errors at counter: " << m.counter;
+        m.validDecode = true;
+        decodeInvalid = false;
     }
-
-    if(m.extendedNavDataBlockBitmask != 0x00000007)
-    {
-        qDebug() << "Extended data block bitmask: counter = " << m.counter;
-        printBinary(m.extendedNavDataBlockBitmask);
-    }
-
-    if(m.externDataBitMask != 0)
-    {
-        qDebug() << "External sensor bitmask: counter = " << m.counter;
-        printBinary(m.externDataBitMask);
-        printMessage();
-
-    }
-
-
 
 }
 
@@ -761,6 +782,18 @@ double gpsBinaryReader::makeDouble(QByteArray a, uint16_t startPos)
     return d;
 }
 
+void gpsBinaryReader::copyQStringToCharArray(char *array, QString s)
+{
+    // This is a helper function for people that like to live dangerously.
+    if(s.length() > 64-2)
+        s.truncate(64-2);
+    for(int i=0; i < s.length(); i++)
+    {
+        array[i] = s[i].toLatin1();
+    }
+    array[s.length()] = '\0';
+}
+
 void gpsBinaryReader::getMessageSum()
 {
     //messageSum = std::accumulate(rawData.begin(), rawData.end()-4, 0);
@@ -823,21 +856,32 @@ void gpsBinaryReader::debugThis()
 //    qDebug() << "Counter: " << getCounter();
 //    printBinary(rawData);
 
-//    printMessage();
+    printMessage();
 //    qDebug() << "Nav Data Block Bitmask: ";
 //    printBinary(m.navDataBlockBitmask);
 
-    qDebug() << "Extended Nav Data Block Bitmask: ";
-    printBinary(m.extendedNavDataBlockBitmask);
+//    qDebug() << "Extended Nav Data Block Bitmask: ";
+//    printBinary(m.extendedNavDataBlockBitmask);
 
-    qDebug() << "External Sensor Data Block Bitmask: ";
-    printBinary(m.externDataBitMask);
+//    qDebug() << "External Sensor Data Block Bitmask: ";
+//    printBinary(m.externDataBitMask);
+}
+
+void gpsBinaryReader::printMessage(gpsMessage g)
+{
+    // This is a stand-alone GPS message printer,
+    // DO NOT access this function if you are streaming live data to this function
+    // Make a separate instance of the binary reader first.
+    this->m = g; // copy over
+    this->printMessage();
 }
 
 void gpsBinaryReader::printMessage()
 {
-    qDebug() << "---------- Printing GPS message: ----------";
+    qDebug() << "---------- BEGIN printing GPS message for counter " << m.counter << ": ----------";
     qDebug() << "validDecode: " << m.validDecode;
+    qDebug() << "Last decoder error message: " << m.lastDecodeErrorMessage;
+    qDebug() << "Number of recently dropped mesages: " << m.numberDropped;
     qDebug() << "---Header:---";
     qDebug() << "messageType: " << m.mType;
     qDebug() << "protocol version: " << (unsigned int)m.protoVers;
@@ -948,7 +992,37 @@ void gpsBinaryReader::printMessage()
         qDebug() << "altitude: " << m.altitude;
     }
 
-    // skip a bit here...
+    if(m.havePositionStdDev)
+    {
+        qDebug() << "--- havePositionStdDev Data (bit 8): ---";
+        qDebug() << "northStdDev: " << m.northStdDev;
+        qDebug() << "eastStdDev: " << m.eastStdDev;
+        qDebug() << "neCorrelation: " << m.neCorrelation;
+        qDebug() << "altitudStdDev: " << m.altitudStdDev;
+    }
+
+    if(m.haveSpeedData)
+    {
+        qDebug() << "--- have Speed Data (bit 9): ---";
+        qDebug() << "northVelocity: " << m.northVelocity;
+        qDebug() << "northVelocity: " << m.northVelocity;
+        qDebug() << "northVelocity: " << m.northVelocity;
+    }
+
+    if(m.haveSpeedStdDev)
+    {
+        qDebug() << "--- have speed std dev data (bit 10): ---";
+        qDebug() << "northVelocityStdDev: " << m.northVelocityStdDev;
+        qDebug() << "eastVelocityStdDev: " << m.eastVelocityStdDev;
+        qDebug() << "upVelocityStdDev: " << m.upVelocityStdDev;
+    }
+    if(m.haveCurrentData)
+    {
+        qDebug() << "--- have ocean current data (bit 12): ---";
+        qDebug() << "northCurrentStdDev: " << m.northCurrentStdDev;
+        qDebug() << "eastCurrentStdDev: " << m.eastCurrentStdDev;
+    }
+
     if(m.haveSystemDateData)
     {
         qDebug() << "--- System time and date: (bit 13): ---";
@@ -956,12 +1030,69 @@ void gpsBinaryReader::printMessage()
         qDebug() << "systemMonth: " << (unsigned int)m.systemMonth;
         qDebug() << "systemYear: " << (unsigned int)m.systemYear;
     }
+
+
+    if(m.haveINSSensorStatus)
+    {
+        qDebug() << "--- have INS SENSOR Status (bit 14): ---";
+        qDebug() << "insSensorStatus1: " << m.insSensorStatus1;
+        printBinary(m.insSensorStatus1);
+        qDebug() << "insSensorStatus2: " << m.insSensorStatus2;
+        printBinary(m.insSensorStatus2);
+    }
+
+    if(m.haveINSAlgorithmStatus)
+    {
+        qDebug() << "--- have INS Algorithm Status (bit 15): ---";
+        qDebug() << "algorithmStatus1: " << m.algorithmStatus1;
+        printBinary(m.algorithmStatus1);
+        qDebug() << "algorithmStatus2: " << m.algorithmStatus2;
+        printBinary(m.algorithmStatus2);
+        qDebug() << "algorithmStatus3: " << m.algorithmStatus3;
+        printBinary(m.algorithmStatus3);
+        qDebug() << "algorithmStatus4: " << m.algorithmStatus4;
+        printBinary(m.algorithmStatus4);
+    }
+    if(m.haveINSSystemStatus)
+    {
+        qDebug() << "--- have INS SYSTEM Status (bit 16): ---";
+        qDebug() << "systemStatus1: " << m.systemStatus1;
+        printBinary(m.systemStatus1);
+        qDebug() << "systemStatus2: " << m.systemStatus2;
+        printBinary(m.systemStatus2);
+        qDebug() << "systemStatus3: " << m.systemStatus3;
+        printBinary(m.systemStatus3);
+    }
+    if(m.haveINSUserStatus)
+    {
+        qDebug() << "--- have INS USER Status (bit 17): ---";
+        qDebug() << "INSuserStatus: " << m.INSuserStatus;
+        printBinary(m.INSuserStatus);
+    }
+
+    // Note: Navigation bitmask bits 18, 19,and 20 have always been zero.
+
     if(m.haveHeaveSurgeSwaySpeedData)
     {
         qDebug() << "--- Heave Surge Sway Speed Data (bit 21): --";
         qDebug() << "realtime_heave_speed: " << m.realtime_heave_speed;
         qDebug() << "surge_speed: " << m.surge_speed;
         qDebug() << "sway_speed: " << m.sway_speed;
+    }
+
+    if(m.haveSpeedVesselData)
+    {
+        qDebug() << "--- Vessel speed block Data (bit 22): ---";
+        qDebug() << "vesselXV1Velocity: " << m.vesselXV1Velocity;
+        qDebug() << "vesselXV2Velocity: " << m.vesselXV2Velocity;
+        qDebug() << "vesselXV3Velocity: " << m.vesselXV3Velocity;
+    }
+    if(m.haveAccelGeographicData)
+    {
+        qDebug() << "--- Accel Geographic Data Data (bit 23): ---";
+        qDebug() << "geographicNorthAccel: " << m.geographicNorthAccel;
+        qDebug() << "geographicEastAccel: " << m.geographicEastAccel;
+        qDebug() << "geographicVertAccel: " << m.geographicVertAccel;
     }
     if(m.haveCourseSpeedGroundData)
     {
@@ -977,11 +1108,73 @@ void gpsBinaryReader::printMessage()
         qDebug() << "meanTempSensor: "<< m.meanTempSensor;
     }
 
+    if(m.haveAttitudeQuaternionData)
+    {
+        qDebug() << "--- Attitude Quaternion Data (bit 26): ---";
+        qDebug() << "attitudeQCq0: " << m.attitudeQCq0;
+        qDebug() << "attitudeQCq1: " << m.attitudeQCq1;
+        qDebug() << "attitudeQCq2: " << m.attitudeQCq2;
+        qDebug() << "attitudeQCq3: " << m.attitudeQCq3;
+    }
+    if(m.haveAttitudeQEData)
+    {
+        qDebug() << "--- Attitude Quaternion E-Data (bit 27): ---";
+        qDebug() << "attitudeQE1: " << m.attitudeQE1;
+        qDebug() << "attitudeQE2: " << m.attitudeQE2;
+        qDebug() << "attitudeQE3: " << m.attitudeQE3;
+    }
+    if(m.haveVesselAccel)
+    {
+        qDebug() << "--- Raw Vessel Acceleration Data (bit 28): ---";
+        qDebug() << "vesselAccelXV1: " << m.vesselAccelXV1;
+        qDebug() << "vesselAccelXV1: " << m.vesselAccelXV1;
+        qDebug() << "vesselAccelXV1: " << m.vesselAccelXV1;
+    }
+    if(m.haveVesselAccelStdDev)
+    {
+        qDebug() << "--- Vessel Acceleration Std Dev (bit 29): ---";
+        qDebug() << "vesselAccelXV1StdDev: " << m.vesselAccelXV1StdDev;
+        qDebug() << "vesselAccelXV2StdDev: " << m.vesselAccelXV2StdDev;
+        qDebug() << "vesselAccelXV3StdDev: " << m.vesselAccelXV3StdDev;
+    }
+    if(m.haveVesselRotationRateStdDev)
+    {
+        qDebug() << "--- Vessel Rotation Rate Std Dev (bit 30): ---";
+        qDebug() << "vesselRotationRateXV1StdDev: " << m.vesselRotationRateXV1StdDev;
+        qDebug() << "vesselRotationRateXV2StdDev: " << m.vesselRotationRateXV2StdDev;
+        qDebug() << "vesselRotationRateXV3StdDev: " << m.vesselRotationRateXV3StdDev;
+    }
+
     qDebug() << "----- END Navigation Data Blocks -----";
+
+    qDebug() << "----- BEGIN Extended Navigation Data Blocks -----";
+    if(m.haveExtendedRawRotationAccelData)
+    {
+        qDebug() << "--- Extended Raw Rotation AccelData (bit 0): ---";
+        qDebug() << "rawRotationAccelXV1: " << m.rawRotationAccelXV1;
+        qDebug() << "rawRotationAccelXV2: " << m.rawRotationAccelXV2;
+        qDebug() << "rawRotationAccelXV3: " << m.rawRotationAccelXV3;
+    }
+    if(m.haveExtendedRawRotationAccelStdDevData)
+    {
+        qDebug() << "--- Extended Raw Rotation Accel Std Dev Data (bit 1): ---";
+        qDebug() << "rawRotationAccelStdDevXV1: " << m.rawRotationAccelStdDevXV1;
+        qDebug() << "rawRotationAccelStdDevXV2: " << m.rawRotationAccelStdDevXV2;
+        qDebug() << "rawRotationAccelStdDevXV3: " << m.rawRotationAccelStdDevXV3;
+    }
+    if(m.haveExtendedRawRotationRateData)
+    {
+        qDebug() << "--- Extended Raw Rotation Rate Data (bit 2): ---";
+        qDebug() << "rawRotationRateXV1: " << m.rawRotationRateXV1;
+        qDebug() << "rawRotationRateXV2: " << m.rawRotationRateXV2;
+        qDebug() << "rawRotationRateXV3: " << m.rawRotationRateXV3;
+    }
+    qDebug() << "----- END Extended Navigation Data Blocks -----";
+
 
     if(m.externDataBitMask != 0)
     {
-        qDebug() << "----- External Data Blocks: ";
+        qDebug() << "----- BEGIN External Data Blocks: ";
         if(m.haveUTC)
         {
             qDebug() << "--- UTC: ---";
@@ -1007,10 +1200,13 @@ void gpsBinaryReader::printMessage()
         qDebug() << "----- END External Data Blocks. -----";
     }
 
+    // Repeat for good measure:
+    qDebug() << "Valid Decode: " << m.validDecode;
+    qDebug() << "Last error: " << m.lastDecodeErrorMessage;
 
-    qDebug() << "Message Sum: " << messageSum;
-    qDebug() << "Claimed Sum: " << m.claimedMessageSum;
-    qDebug() << "Checksum good?: " << (messageSum==m.claimedMessageSum);
+    qDebug() << "Calculated Message Sum: " << messageSum;
+    qDebug() << "Claimed Message Sum:    " << m.claimedMessageSum;
+    qDebug() << "Checksum good?:         " << (messageSum==m.claimedMessageSum);
     qDebug() << "---------- END message decode for counter " << m.counter << " ----------";
 
 }

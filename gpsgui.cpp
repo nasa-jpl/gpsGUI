@@ -419,7 +419,9 @@ void GpsGui::on_disconnectBtn_clicked()
 
 void GpsGui::on_debugBtn_clicked()
 {
-    emit getDebugInfo();
+    gpsBinaryReader r;
+    r.printMessage(m);
+    //emit getDebugInfo();
 }
 
 void GpsGui::on_clearBtn_clicked()
