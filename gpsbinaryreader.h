@@ -1,6 +1,8 @@
 #ifndef GPSBINARYREADER_H
 #define GPSBINARYREADER_H
 
+#include <mutex>
+
 #include <QByteArray>
 #include <QDebug>
 
@@ -43,7 +45,7 @@ struct gnssInfo {
 
 struct gpsMessage {
 
-    bool validDecode;
+    bool validDecode = false;
     uint32_t numberDropped = 0;
     char lastDecodeErrorMessage[64];
 
@@ -71,13 +73,13 @@ struct gpsMessage {
     float heading;
     float roll;
     float pitch;
-    bool haveAltitudeHeading;
+    bool haveAltitudeHeading = false;
 
     // Altitude and Heading standard deviation data block (bit 1):
     float headingStardardDeviation;
     float rollStandardDeviation;
     float pitchStandardDeviation;
-    bool haveAltitudeHeadingStdDev;
+    bool haveAltitudeHeadingStdDev = false;
 
     // Mystery data, bit 2: RealTimeHeaveSurgeSway
 
@@ -85,94 +87,94 @@ struct gpsMessage {
     float rt_heave_atBdL;      /*! Meters - positive UP in horizontal vehicle frame */
     float rt_surge_atBdL; /*! Meters - positive FORWARD in horizontal vehicle frame */
     float rt_sway_atBdL;  /*! Meters - positive PORT SIDE in horizontal vehicle frame */
-    bool haveRealTimeHeaveSurgeSwayData;
+    bool haveRealTimeHeaveSurgeSwayData = false;
 
     // SmartHeave data, bit 3:
     dword smartHeaveValidityTime_100us;
     float smartHeave_m;
-    bool haveSmartHeaveData;
+    bool haveSmartHeaveData = false;
 
     // Heading/Roll/Pitch rate data block (bit 4):
     float headingRotationRate;
     float rollRotationRate;
     float pitchRotationRate;
-    bool haveHeadingRollPitchRate;
+    bool haveHeadingRollPitchRate = false;
 
     // Body rotation rate data block in vessel frame (bit 5):
     float rotationRateXV1;
     float rotationRateXV2;
     float rotationRateXV3;
-    bool haveBodyRotationRate;
+    bool haveBodyRotationRate = false;
 
     // Accelerations data block in vessel frame (bit 6):
     float accelXV1;
     float accelXV2;
     float accelXV3;
-    bool haveAccel;
+    bool haveAccel = false;
 
     // Position data (bit 7):
     double latitude;
     double longitude;
     unsigned char altitudeReference;
     float altitude;
-    bool havePosition;
+    bool havePosition = false;
 
     // Position standard deviation data block (bit 8):
     float northStdDev;
     float eastStdDev;
     float neCorrelation;
     float altitudStdDev;
-    bool havePositionStdDev;
+    bool havePositionStdDev = false;
 
     // Speed data block in geographic frame (bit 9):
     float northVelocity;
     float eastVelocity;
     float upVelocity;
-    bool haveSpeedData;
+    bool haveSpeedData = false;
 
     // Speed standard deviation data block in geographic frame (bit 10):
     float northVelocityStdDev;
     float eastVelocityStdDev;
     float upVelocityStdDev;
-    bool haveSpeedStdDev;
+    bool haveSpeedStdDev = false;
 
     // (ocean) Current data block in geographic frame (bit 11):
     float northCurrent;
     float eastCurrent;
-    bool haveCurrentData;
+    bool haveCurrentData = false;
 
     // (ocean) Current standard deviation data block in gepgraphic frame (bit 12):
     float northCurrentStdDev;
     float eastCurrentStdDev;
-    bool haveCurrentStdDev;
+    bool haveCurrentStdDev = false;
 
     // System date data block (bit 13):
     unsigned char systemDay;
     unsigned char systemMonth;
     word systemYear;
-    bool haveSystemDateData;
+    bool haveSystemDateData = false;
 
     // INS Sensor Status (bit 14):
     dword insSensorStatus1;
     dword insSensorStatus2;
-    bool haveINSSensorStatus;
+    bool haveINSSensorStatus = false;
 
     // INS Algorithm Status (bit 15):
     dword algorithmStatus1;
     dword algorithmStatus2;
     dword algorithmStatus3;
     dword algorithmStatus4;
-    bool haveINSAlgorithmStatus;
+    bool haveINSAlgorithmStatus = false;
 
     // INS System Status (bit 16):
     dword systemStatus1;
     dword systemStatus2;
     dword systemStatus3;
-    bool haveINSSystemStatus;
+    bool haveINSSystemStatus = false;
 
     // INS User Status (bit 17):
     dword INSuserStatus;
-    bool haveINSUserStatus;
+    bool haveINSUserStatus = false;
 
     // Bits 18, 19, and 20 have never been received
 
@@ -180,7 +182,7 @@ struct gpsMessage {
     float realtime_heave_speed;
     float surge_speed;
     float sway_speed;
-    bool haveHeaveSurgeSwaySpeedData;
+    bool haveHeaveSurgeSwaySpeedData = false;
 
     //    From the OEM software, these are the next ones ("reserved" in the spec):
     //    boost::optional<AHRSAlgorithmStatus> ahrsAlgorithmStatus;
@@ -191,55 +193,55 @@ struct gpsMessage {
     float vesselXV1Velocity;
     float vesselXV2Velocity;
     float vesselXV3Velocity;
-    bool haveSpeedVesselData;
+    bool haveSpeedVesselData = false;
 
     // Acceleration data block in geographic frame (bit 23):
     float geographicNorthAccel;
     float geographicEastAccel;
     float geographicVertAccel;
-    bool haveAccelGeographicData;
+    bool haveAccelGeographicData = false;
 
     // Course and speed over ground (bit 24):
     float courseOverGround;
     float speedOverGround;
-    bool haveCourseSpeedGroundData;
+    bool haveCourseSpeedGroundData = false;
 
     // Temperatures (bit 25):
     float meanTempFOG;
     float meanTempACC;
     float meanTempSensor;
-    bool haveTempData;
+    bool haveTempData = false;
 
     // Attitude quaternion (bit 26):
     float attitudeQCq0;
     float attitudeQCq1;
     float attitudeQCq2;
     float attitudeQCq3;
-    bool haveAttitudeQuaternionData;
+    bool haveAttitudeQuaternionData = false;
 
     // Attitude quaternion standard deviation (bit 27):
     float attitudeQE1;
     float attitudeQE2;
     float attitudeQE3;
-    bool haveAttitudeQEData;
+    bool haveAttitudeQEData = false;
 
     // Raw acceleration in vessel frame (bit 28):
     float vesselAccelXV1;
     float vesselAccelXV2;
     float vesselAccelXV3;
-    bool haveVesselAccel;
+    bool haveVesselAccel = false;
 
     // Acceleration standard deviation in vessel frame (bit 29):
     float vesselAccelXV1StdDev;
     float vesselAccelXV2StdDev;
     float vesselAccelXV3StdDev;
-    bool haveVesselAccelStdDev;
+    bool haveVesselAccelStdDev = false;
 
     // Rotation rate standard deviation in vessel frame (bit 30):
     float vesselRotationRateXV1StdDev;
     float vesselRotationRateXV2StdDev;
     float vesselRotationRateXV3StdDev;
-    bool haveVesselRotationRateStdDev;
+    bool haveVesselRotationRateStdDev = false;
 
     //
     //  End Navigation Data
@@ -282,14 +284,14 @@ struct gpsMessage {
     // UTC data block (bit 0):
     dword UTCdataValidityTime;
     unsigned char UTCSource;
-    bool haveUTC;
+    bool haveUTC = false;
 
     // GNSS and Manual GNSS data blocks (bits 1, 2, and 3):
     // may contain data for external (extra) GNSS inputs 2 and 3
 
-    bool haveGNSSInfo1;
-    bool haveGNSSInfo2;
-    bool haveGNSSInfo3;
+    bool haveGNSSInfo1 = false;
+    bool haveGNSSInfo2 = false;
+    bool haveGNSSInfo3 = false;
 
     gnssInfo gnss[3];
 
@@ -329,6 +331,8 @@ class gpsBinaryReader
 {
 private:
     void initialize();
+
+    std::mutex mtx;
 
     QByteArray rawData;
     uint16_t dataPos;

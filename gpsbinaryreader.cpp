@@ -12,6 +12,7 @@ gpsBinaryReader::gpsBinaryReader(QByteArray rawData) : rawData(rawData)
     initialize();
     oldCounter = 0;
     firstRun = true;
+    memset(&m, 0x0, sizeof(gpsMessage));
     if(rawData.length())
         processData();
 }
@@ -20,6 +21,7 @@ void gpsBinaryReader::insertData(QByteArray rawData)
 {
     initialize();
     this->rawData = rawData;
+    memset(&m, 0x0, sizeof(gpsMessage));
     if(rawData.length())
         processData();
     oldCounter = m.counter;
@@ -48,6 +50,8 @@ void gpsBinaryReader::initialize()
 
 void gpsBinaryReader::processData()
 {
+    mtx.lock();
+
     copyQStringToCharArray( m.lastDecodeErrorMessage, QString("NONE") );
     detMsgType();
     m.protoVers = rawData.at(2);
@@ -61,6 +65,7 @@ void gpsBinaryReader::processData()
         m.validDecode = false;
         decodeInvalid = true;
         copyQStringToCharArray( m.lastDecodeErrorMessage, QString("UNSUPPORTED MSG TYPE") );
+        mtx.unlock();
         return;
     }
 
@@ -82,6 +87,7 @@ void gpsBinaryReader::processData()
         m.validDecode = false;
         decodeInvalid = true;
         copyQStringToCharArray( m.lastDecodeErrorMessage, QString("UNK PROTO  ") );
+        mtx.unlock();
         return;
         break;
     }
@@ -349,6 +355,8 @@ void gpsBinaryReader::processData()
         m.validDecode = true;
         decodeInvalid = false;
     }
+
+    mtx.unlock();
 
 }
 
@@ -1172,8 +1180,8 @@ void gpsBinaryReader::printMessage()
     qDebug() << "----- END Extended Navigation Data Blocks -----";
 
 
-    if(m.externDataBitMask != 0)
-    {
+    //if(m.externDataBitMask != 0)
+
         qDebug() << "----- BEGIN External Data Blocks: ";
         if(m.haveUTC)
         {
@@ -1198,7 +1206,7 @@ void gpsBinaryReader::printMessage()
             printGNSSInfo(3);
         }
         qDebug() << "----- END External Data Blocks. -----";
-    }
+
 
     // Repeat for good measure:
     qDebug() << "Valid Decode: " << m.validDecode;

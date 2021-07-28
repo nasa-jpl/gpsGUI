@@ -294,6 +294,7 @@ void GpsGui::receiveGPSMessage(gpsMessage m)
         QString time = QString("%1:%2:%3 UTC").arg(hour, 2, 10, QChar('0')).arg(minute, 2, 10, QChar('0')).arg(second, 2, 10, QChar('0'));
 
         ui->utcTimeLabel->setText(time);
+        //qDebug() << "UTC time received: " << t << " (100 micro-seconds) hours: " << hour << " minute: " << minute << " second: " << second << " string: " << time;
 
     }
 
