@@ -48,6 +48,7 @@ QLedLabel::QLedLabel(QWidget* parent) :
     QLabel(parent)
 {
     //Set to ok by default
+    this->setText("");
     setState(StateOkBlue);
     setFixedSize(SIZE, SIZE);
 }

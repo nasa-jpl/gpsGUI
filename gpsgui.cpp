@@ -35,6 +35,9 @@ GpsGui::GpsGui(QWidget *parent)
     ui->statusDecodeOkLED->setState(QLedLabel::StateOkBlue);
     ui->statusDecodeOkLabel->setText("NA"); // not applicable
 
+    ui->statusHeartbeatLED->setText("");
+    ui->statusSatelliteRxLED->setText("");
+
     firstMessage = true;
 
     qRegisterMetaType<gpsMessage>();
@@ -135,7 +138,7 @@ void GpsGui::receiveGPSMessage(gpsMessage m)
 
 
     bool doPlotUpdate = (msgsReceivedCount%40)==0;
-    bool doWidgetPaint = (msgsReceivedCount%5)==0;
+    bool doWidgetPaint = (msgsReceivedCount%10)==0;
     bool doLabelUpdate = (msgsReceivedCount%10)==0;
 
     if(doLabelUpdate)
@@ -156,6 +159,14 @@ void GpsGui::receiveGPSMessage(gpsMessage m)
             ui->statusDecodeOkLED->setState(QLedLabel::StateError);
             ui->statusDecodeOkLabel->setText("NG");
         }
+
+        uint64_t t = m.navDataValidityTime;
+        int hour = t / ((float)1E4)/60.0/60.0;
+        int minute = ( t / ((float)1E4)/60.0 ) - (hour*60) ;
+        float second = ( t / ((float)1E4) ) - (hour*60.0*60.0) - (minute*60.0);
+
+        QString time = QString("%1:%2:%3 UTC").arg(hour, 2, 10, QChar('0')).arg(minute, 2, 10, QChar('0')).arg(second, 2, 'f', 3);
+        ui->validityTimeLabel->setText(time);
     }
 
 
@@ -260,6 +271,29 @@ void GpsGui::receiveGPSMessage(gpsMessage m)
             upVelos.push_front(m.upVelocity);
             upVelos.pop_back();
         }
+
+    }
+
+    if(m.haveSystemDateData)
+    {
+        QString date = QString("%1-%2-%3").arg(m.systemYear).arg(m.systemMonth, 2, 10, QChar('0')).arg(m.systemDay, 2, 10, QChar('0'));
+        ui->utcDateLabel->setText(date);
+    }
+
+    if(m.haveUTC)
+    {
+        // Note: This GPS device converts GPST to UTC for us.
+        // Otherwise, we would need to account for the differences in the various GNSS satellite systems, which do not all follow GPST or UTC.
+
+        // The units are in 100 micro-seconds.
+        uint64_t t = m.UTCdataValidityTime;
+        int hour = t / ((float)1E4)/60.0/60.0;
+        int minute = ( t / ((float)1E4)/60.0 ) - (hour*60) ;
+        int second = ( t / ((float)1E4) ) - (hour*60.0*60.0) - (minute*60.0);
+
+        QString time = QString("%1:%2:%3 UTC").arg(hour, 2, 10, QChar('0')).arg(minute, 2, 10, QChar('0')).arg(second, 2, 10, QChar('0'));
+
+        ui->utcTimeLabel->setText(time);
 
     }
 
