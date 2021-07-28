@@ -165,7 +165,7 @@ void GpsGui::receiveGPSMessage(gpsMessage m)
         int minute = ( t / ((float)1E4)/60.0 ) - (hour*60) ;
         float second = ( t / ((float)1E4) ) - (hour*60.0*60.0) - (minute*60.0);
 
-        QString time = QString("%1:%2:%3 UTC").arg(hour, 2, 10, QChar('0')).arg(minute, 2, 10, QChar('0')).arg(second, 2, 'f', 3);
+        QString time = QString("%1:%2:%3 UTC").arg(hour, 2, 10, QChar('0')).arg(minute, 2, 10, QChar('0')).arg(second, 6, 'f', 3, QChar('0'));
         ui->validityTimeLabel->setText(time);
     }
 
@@ -174,9 +174,9 @@ void GpsGui::receiveGPSMessage(gpsMessage m)
     {
         if(doLabelUpdate)
         {
-            ui->headingDataLabel->setText(QString("%1").arg(m.heading));
-            ui->rollDataLabel->setText(QString("%1").arg(m.roll));
-            ui->pitchDataLabel->setText(QString("%1").arg(m.pitch));
+            ui->headingDataLabel->setText(QString("%1").arg(m.heading, 0, 'f', 6));
+            ui->rollDataLabel->setText(QString("%1").arg(m.roll, 0, 'f', 6));
+            ui->pitchDataLabel->setText(QString("%1").arg(m.pitch, 0, 'f', 6));
         }
 
         // Store for plots:
