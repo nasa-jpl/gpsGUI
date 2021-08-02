@@ -18,17 +18,19 @@ class gpsBinaryLogger : public QObject
     void clearBuffer();
     void writeBufferToFile();
     void openFileWriting();
+    void closeFileWriting();
     bool amWritingFile = false;
     bool filenameSet = false;
+    bool loggingAllowed = false;
     int lastFileIOError = 0;
-    uint16_t bufferSize;
+    uint16_t idealBufferSize;
     uint64_t messageCount = 0;
 
     std::mutex bufferMutex;
     std::vector<QByteArray> buffer;
 
     std::mutex fileMutex;
-    FILE *fileWritePtr;
+    FILE *fileWritePtr = NULL;
     QString filename;
 
 
@@ -39,6 +41,8 @@ public:
 
 public slots:
     void setFilename(QString filename);
+    void startLogging();
+    void stopLogging();
     void insertData(QByteArray raw);
     void getFilenameSetStatus();
     void getLifetimeMessageCount();
