@@ -18,7 +18,7 @@
     <item>
      <widget class="QTabWidget" name="tabWidget">
       <property name="currentIndex">
-       <number>0</number>
+       <number>3</number>
       </property>
       <widget class="QWidget" name="mainTab">
        <attribute name="title">
@@ -649,6 +649,20 @@
             </property>
             <property name="text">
              <string>10.0.0.6</string>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QLabel" name="label_9">
+            <property name="text">
+             <string>Binary Log Filename:</string>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QLineEdit" name="gpsBinLogEdit">
+            <property name="text">
+             <string>/tmp/gpsbinary.log</string>
             </property>
            </widget>
           </item>

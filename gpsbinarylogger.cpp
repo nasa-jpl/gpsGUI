@@ -8,6 +8,7 @@ gpsBinaryLogger::gpsBinaryLogger()
     // rollover is after 2924712086 years at 200 Hz.
     setupBuffer();
     loggingAllowed = false;
+    fileIsOpen = false;
 }
 
 gpsBinaryLogger::~gpsBinaryLogger()
@@ -45,46 +46,56 @@ void gpsBinaryLogger::setupBuffer()
 
 void gpsBinaryLogger::openFileWriting()
 {
-    if(filename.isEmpty())
+    if(!fileIsOpen)
     {
-        emit haveStatusMessage(QString("Error, filename string empty, cannot write GPS data to file!!"));
-        loggingAllowed = false;
-        // do things
-        return;
-    }
-    if(fileWritePtr != NULL)
-    {
-        emit haveStatusMessage(QString("Error, file pointer was already open!!"));
-        return;
-    }
-    fileWritePtr = fopen(filename.toStdString().c_str() ,"wb");
-    if(fileWritePtr == NULL)
-    {
-        emit haveStatusMessage(QString("Error, filename pointer is NULL, cannot write GPS data to file [%1]!!").arg(filename));
-        // do things
-        return;
+        if(filename.isEmpty())
+        {
+            emit haveStatusMessage(QString("Error, filename string empty, cannot write GPS data to file!!"));
+            loggingAllowed = false;
+            // do things
+            return;
+        }
+        if(fileWritePtr != NULL)
+        {
+            emit haveStatusMessage(QString("Error, file pointer was already open!!"));
+            return;
+        }
+        fileWritePtr = fopen(filename.toStdString().c_str() ,"wb");
+        if(fileWritePtr == NULL)
+        {
+            emit haveStatusMessage(QString("Error, filename pointer is NULL, cannot write GPS data to file [%1]!!").arg(filename));
+            // do things
+            return;
+        }
+        fileIsOpen = true;
     }
 }
 
 void gpsBinaryLogger::closeFileWriting()
 {
-    std::lock_guard<std::mutex>lockfile(fileMutex);
-    if(fileWritePtr != NULL)
+    if(fileIsOpen)
     {
-        int rtnValue = fclose(fileWritePtr);
-        lastFileIOError = ferror(fileWritePtr);
-        if(rtnValue != 0)
+        std::lock_guard<std::mutex>lockfile(fileMutex);
+        if(fileWritePtr != NULL)
         {
-            emit haveStatusMessage(QString("Warning, gps binary logger closed file with status %1 and error %2.").arg(rtnValue).arg(lastFileIOError));
+            int rtnValue = fclose(fileWritePtr);
+            lastFileIOError = ferror(fileWritePtr);
+            if(rtnValue != 0)
+            {
+                emit haveStatusMessage(QString("Warning, gps binary logger closed file with status %1 and error %2.").arg(rtnValue).arg(lastFileIOError));
+            }
+        } else {
+            // class destructor calls here too, maybe disable warning.
+            emit haveStatusMessage(QString("Warning, file pointer was already closed!!"));
         }
-    } else {
-        // class destructor calls here too, maybe disable warning.
-        emit haveStatusMessage(QString("Warning, file pointer was already closed!!"));
+        fileIsOpen = false;
     }
 }
 
 void gpsBinaryLogger::writeBufferToFile()
 {
+    if(!fileIsOpen)
+        return;
     if(loggingAllowed==false)
     {
         emit haveStatusMessage(QString("Error, gps binary logging is disabled, cannot write data to file!!"));
@@ -108,10 +119,16 @@ void gpsBinaryLogger::writeBufferToFile()
     size_t size = 0;
     size_t nWritten = 0;
 
+    // The following "magicId" can be enabled to aid in debugging and searching the binary file:
+    //QByteArray magicId;
+    //magicId.setRawData("\xCA\xFE\x00\x11\x22\x33\x44\x55\x66\x77\x88\x99\xaa\xbb\xcc\xdd\xee\xff", 18);
+
     for(uint16_t i=0; i < bufSize; i++)
     {
         temp = buffer.at(i);
-        size = temp.size() - 1; // Remove null-termination
+        // TESTING ONLY:
+        //temp.append(magicId);
+        size = temp.size();
         if(size != 0)
         {
             nWritten = fwrite(temp.constData(), size,1,fileWritePtr);
@@ -166,6 +183,8 @@ uint16_t gpsBinaryLogger::getBufferSize()
 
 void gpsBinaryLogger::setFilename(QString filename)
 {
+    // This can be set multiple times, however,
+    // the file will be opened to the current value of this variable.
     if(!filename.isEmpty())
     {
         this->filename = filename;

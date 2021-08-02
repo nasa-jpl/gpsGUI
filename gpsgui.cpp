@@ -50,7 +50,7 @@ GpsGui::GpsGui(QWidget *parent)
     connect(gpsThread, &QThread::finished, gps, &QObject::deleteLater);
 
 
-    connect(this, SIGNAL(connectToGPS(QString,int)), gps, SLOT(connectToGPS(QString,int)));
+    connect(this, SIGNAL(connectToGPS(QString,int,QString)), gps, SLOT(connectToGPS(QString,int,QString)));
     connect(this, SIGNAL(disconnectFromGPS()), gps, SLOT(disconnectFromGPS()));
     connect(this, SIGNAL(getDebugInfo()), gps, SLOT(debugThis()));
     connect(gps, SIGNAL(haveGPSString(QString)), this, SLOT(handleGPSDataString(QString)));
@@ -59,7 +59,7 @@ GpsGui::GpsGui(QWidget *parent)
     connect(gps, SIGNAL(connectionGood()), this, SLOT(handleGPSConnectionGood()));
 
     connect(gps, SIGNAL(haveGPSMessage(gpsMessage)), this, SLOT(receiveGPSMessage(gpsMessage)));
-
+    connect(this, SIGNAL(setBinaryLogFilename(QString)), gps, SLOT(setBinaryLoggingFilename(QString)));
     gpsThread->start();
 
     ui->gpsPort->setValidator( new QIntValidator(0,65535,this) );
@@ -442,7 +442,12 @@ void GpsGui::updatePlots()
 
 void GpsGui::on_connectBtn_clicked()
 {
-    emit connectToGPS(ui->gpsHostEdit->text(), ui->gpsPort->text().toInt());
+    QString binaryLogFilename = ui->gpsBinLogEdit->text();
+    if(binaryLogFilename.isEmpty())
+    {
+        binaryLogFilename = "/tmp/gpsbinary--DEFAULT--.log";
+    }
+    emit connectToGPS(ui->gpsHostEdit->text(), ui->gpsPort->text().toInt(), binaryLogFilename);
     gnssStatusTime.restart();
 }
 

@@ -20,6 +20,7 @@ class gpsBinaryLogger : public QObject
     void openFileWriting();
     void closeFileWriting();
     bool amWritingFile = false;
+    bool fileIsOpen = false;
     bool filenameSet = false;
     bool loggingAllowed = false;
     int lastFileIOError = 0;

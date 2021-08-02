@@ -74,9 +74,10 @@ public slots:
     void receiveGPSMessage(gpsMessage m);
 
 signals:
-    void connectToGPS(QString host, int port);
+    void connectToGPS(QString host, int port, QString binaryLogFilename);
     void disconnectFromGPS();
     void getDebugInfo();
+    void setBinaryLogFilename(QString binlogname);
 
 private slots:
     void handleGPSStatusMessage(QString message);

@@ -14,6 +14,12 @@ gpsNetwork::gpsNetwork(QObject *parent) : QObject(parent)
     connect(tcpsocket, &QIODevice::readyRead, this, &gpsNetwork::readData);
     connect(tcpsocket, SIGNAL(connected()), this, SLOT(setConnected()));
 
+    connect(&binLogger, &gpsBinaryLogger::haveFileIOError, this, &gpsNetwork::handleBinaryLoggingErrorNumber);
+    connect(&binLogger, &gpsBinaryLogger::haveStatusMessage, this, &gpsNetwork::handleBinaryLoggingStatusMessage);
+
+    connect(this, &gpsNetwork::haveBinaryLoggingFilename, &binLogger, &gpsBinaryLogger::setFilename);
+
+    binLogger.setFilename("/tmp/gps.log"); // temporary filename
 
 }
 
@@ -21,6 +27,8 @@ gpsNetwork::~gpsNetwork()
 {
     this->disconnectFromGPS();
     delete tcpsocket;
+
+    binLogger.stopLogging();
 }
 
 void gpsNetwork::setGPSHost(QString gpsHost, int gpsPort)
@@ -41,19 +49,31 @@ void gpsNetwork::disconnectFromGPS()
     connectedToHost = false;
 }
 
-void gpsNetwork::connectToGPS(QString gpsHost, int gpsPort)
+void gpsNetwork::connectToGPS(QString gpsHost, int gpsPort, QString gpsBinaryLogFilename)
 {
     // Public slot to start connection
+
+    binLogger.setFilename(gpsBinaryLogFilename);
+    binLogger.startLogging();
+
     this->gpsHost = gpsHost;
     this->gpsPort = gpsPort;
     emit statusMessage(QString("About to connect to host ") + gpsHost);
     this->createConnection();
+
 }
 
 void gpsNetwork::connectToGPS()
 {
     // Public slot to start connection
+    // Do not use this function, it is for testing only.
     this->createConnection();
+    binLogger.startLogging();
+}
+
+void gpsNetwork::setBinaryLoggingFilename(QString binLogFilename)
+{
+    emit haveBinaryLoggingFilename(binLogFilename);
 }
 
 bool gpsNetwork::createConnection()
@@ -78,6 +98,8 @@ void gpsNetwork::readData()
     gpsdataString = QString("Size: %1, start: 0x%2").arg(data.size()).arg((unsigned char)data.at(0), 2, 16, QChar('0'));
 
     // Begin decoding in the reader:
+
+    binLogger.insertData(data); // log to binary file
     reader.insertData(data);
 
     //messageKinds gpsMsgType = reader.getMessageType();
@@ -125,6 +147,16 @@ void gpsNetwork::handleError(QAbstractSocket::SocketError e)
     errorString = tcpsocket->errorString();
     emit statusMessage(QString("Socket Error: ") + errorString);
     emit connectionError(e);
+}
+
+void gpsNetwork::handleBinaryLoggingErrorNumber(int errorNum)
+{
+    qDebug() << __PRETTY_FUNCTION__ << "Binary log error number: " << errorNum;
+}
+
+void gpsNetwork::handleBinaryLoggingStatusMessage(QString errorString)
+{
+    qDebug() << __PRETTY_FUNCTION__ << "Binary log error string: " << errorString;
 }
 
 bool gpsNetwork::checkConnected()

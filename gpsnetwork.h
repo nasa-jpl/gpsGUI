@@ -6,6 +6,7 @@
 #include <QDataStream>
 
 #include "gpsbinaryreader.h"
+#include "gpsbinarylogger.h"
 
 class gpsNetwork : public QObject
 {
@@ -18,6 +19,7 @@ class gpsNetwork : public QObject
     QDataStream dataIn;
 
     gpsBinaryReader reader;
+    gpsBinaryLogger binLogger;
 
     bool createConnection();
 
@@ -27,6 +29,7 @@ private slots:
     void handleError(QAbstractSocket::SocketError);
     void setConnected();
 
+
 public:
     explicit gpsNetwork(QObject *parent = nullptr);
     ~gpsNetwork();
@@ -34,10 +37,15 @@ public:
 
 public slots:
     void setGPSHost(QString gpsHost, int gpsPort);
-    void connectToGPS(QString gpsHost, int gpsPort);
+    void connectToGPS(QString gpsHost, int gpsPort, QString gpsBinaryLogFilename);
     void connectToGPS();
     void disconnectFromGPS();
+    void setBinaryLoggingFilename(QString binLogFilename);
     void debugThis();
+
+    // Binary logging slots:
+    void handleBinaryLoggingStatusMessage(QString errorString);
+    void handleBinaryLoggingErrorNumber(int errorNum);
 
 signals:
     void statusMessage(QString);
@@ -45,6 +53,7 @@ signals:
     void connectionGood();
     void haveGPSString(QString);
     void haveGPSMessage(gpsMessage);
+    void haveBinaryLoggingFilename(QString binLogFilename);
 
 };
 
