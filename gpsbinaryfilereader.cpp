@@ -8,7 +8,6 @@ gpsBinaryFileReader::gpsBinaryFileReader()
     maximumMessageSize = 512; // 391 is max seen
     messageDelayMicroSeconds = 1E6 / 200.0;
     rawData = (char*)malloc(maximumMessageSize); // bytes to hold a message read
-
 }
 
 gpsBinaryFileReader::~gpsBinaryFileReader()
@@ -35,30 +34,16 @@ void gpsBinaryFileReader::startProcessFile()
 {
     bool found = false;
     bool ok = true;
-    volatile long offset = 0;
-    (void)offset;
-
-
 
     openFile();
     if(!fileOpen)
         return;
 
-
-    //fseek(binFilePtr, 0L, SEEK_SET); // go to beginning of file
-
-
-
-    //offset = ftell(binFilePtr); // starting point
-
-
     while(ok && keepGoing)
     {
 
-        //qDebug() << "About to try find message.";
         found = findMessage(); // Block while looking through the file
                                // advance file two bytes in the process
-        //qDebug() << "finished the findMessage.";
         if(!found)
         {
             // We read the entire file, didn't find anything
@@ -66,9 +51,6 @@ void gpsBinaryFileReader::startProcessFile()
             return;
         }
 
-        // rewind two bytes (not needed anymore:
-        //        offset = ftell(my_file);
-        //        fseek(binFilePtr, offset-2, SEEK_CUR);
         // Read the size of the next message from the message header:
         messageSizeBytes = readV5header(); // read the next 27-2 bytes
         //emit haveStatusMessage(QString("Read header for messageCount %1. Telegram size is %2 bytes.").arg(messagesRead).arg(messageSizeBytes)  );
@@ -79,6 +61,7 @@ void gpsBinaryFileReader::startProcessFile()
         m = reader.getMessage();
         if(m.validDecode)
         {
+            // Here is where the complete, properly-decoded message is.
             emit haveGPSMessage(m);
         } else {
             emit haveErrorMessage(QString("Invalid decode. Message number %1 with counter value %2, error message: [%3], message checksum: %4, calculated message checksum: %5, byte array length: %6, message telegram claimed size: %7")\
@@ -113,8 +96,6 @@ bool gpsBinaryFileReader::findMessage()
     //emit haveStatusMessage(QString("findMessage: starting read at offset value: %1").arg(offset));
 
 
-    // TODO: Add file size checking so as to not read beyond the file
-    // TODO: Account for a situation where we read and are off by one byte.
     while(lookingForMessageStart)
     {
         nread = fread(rawData, sizeof(char), 2, binFilePtr);
@@ -150,8 +131,6 @@ uint16_t gpsBinaryFileReader::readV5header()
     }
     // Position in file for total telegram size data (a 2-byte "word"):
     offset = 17;
-//    char telegramB0 = rawData[offset];
-//    char telegramB1 = rawData[offset+1];
 
     return (unsigned char)rawData[offset+1] | ((unsigned char)rawData[offset+0] << 8);
 
@@ -160,7 +139,6 @@ uint16_t gpsBinaryFileReader::readV5header()
 bool gpsBinaryFileReader::readRestOfMessage()
 {
     size_t nread = 0; // for use as we read things
-    // The +4 is from the checksum size, which isn't included in the messageSizeBytes per the ICD.
     // +2: move past the I X bytes
     // +header: move past the header which has been read
     // -2: we didn't read the entire header actually, so scoot in two
@@ -171,11 +149,12 @@ bool gpsBinaryFileReader::readRestOfMessage()
     nread = fread(rawData+2+headerV5sizeBytes-2, sizeof(char), nBytesToRead, binFilePtr);
     if(nread != size_t(nBytesToRead))
     {
-        emit haveErrorMessage(QString("readRestOfMessage: Tried to read %1 bytes but read %2 instead.").arg(messageSizeBytes+4).arg(nread));
+        emit haveErrorMessage(QString("readRestOfMessage: Tried to read %1 bytes but read %2 instead.").arg(nBytesToRead).arg(nread));
         return false;
     }
 
     // Note: the checksum will fail if we transfer too many bytes in
+    // The expected length of rawData is messageSizeBytes, which is 392 bytes usually, and once per second 397 and 438 bytes.
     binMessage.setRawData(rawData, messageSizeBytes);
 
     return true;
@@ -217,7 +196,7 @@ void gpsBinaryFileReader::closeFile()
         if((rtnVal) || lastFileError)
         {
             emit haveFileReadError(lastFileError);
-            emit haveErrorMessage(QString("Error opening binary gps file [%1] for reading: %2").arg(filename).arg(lastFileError));
+            emit haveErrorMessage(QString("Error closing binary gps file [%1]: %2").arg(filename).arg(lastFileError));
         }
 
         fileOpen = false;

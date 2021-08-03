@@ -541,6 +541,7 @@ void GpsGui::on_selFileBtn_clicked()
 void GpsGui::on_replayGPSBtn_clicked()
 {
     //emit setBinaryLogReplayFilename(ui->gpsBinLogOpenEdit->text());
+    ui->statusHeartbeatLED->setState(QLedLabel::StateOk);
     emit startGPSReplay();
 }
 
