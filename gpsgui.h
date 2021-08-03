@@ -12,6 +12,7 @@
 
 #include "gpsnetwork.h"
 #include "gpsbinaryreader.h"
+#include "gpsbinaryfilereader.h"
 
 QT_BEGIN_NAMESPACE
 namespace Ui { class GpsGui; }
@@ -24,6 +25,9 @@ class GpsGui : public QMainWindow
     QThread *gpsThread;
     gpsNetwork *gps;
     gpsMessage m;
+    gpsBinaryFileReader *fileReader;
+    QThread *replayThread;
+    QString binaryLogReplayFilename;
 
     // Record 1 out of every 40 points for 5 Hz updates to plots
     // therefore, for 90 seconds of data, we need 90*5 = 450 point vectors
@@ -72,12 +76,16 @@ public:
 
 public slots:
     void receiveGPSMessage(gpsMessage m);
+    void handleErrorMessage(QString);
 
 signals:
     void connectToGPS(QString host, int port, QString binaryLogFilename);
     void disconnectFromGPS();
     void getDebugInfo();
     void setBinaryLogFilename(QString binlogname);
+    void setBinaryLogReplayFilename(QString replayFilename);
+    void startGPSReplay();
+    void stopGPSReplay();
 
 private slots:
     void handleGPSStatusMessage(QString message);
@@ -94,6 +102,14 @@ private slots:
     void on_clearBtn_clicked();
 
     void on_clearErrorBtn_clicked();
+
+    void on_selFileBtn_clicked();
+
+    void on_replayGPSBtn_clicked();
+
+    void on_gpsBinLogOpenEdit_editingFinished();
+
+    void on_stopReplayBtn_clicked();
 
 private:
     Ui::GpsGui *ui;

@@ -655,7 +655,7 @@
           <item>
            <widget class="QLabel" name="label_9">
             <property name="text">
-             <string>Binary Log Filename:</string>
+             <string>Binary Log (save) Filename:</string>
             </property>
            </widget>
           </item>
@@ -719,6 +719,40 @@
          </layout>
         </item>
         <item>
+         <layout class="QHBoxLayout" name="horizontalLayout_12">
+          <property name="leftMargin">
+           <number>0</number>
+          </property>
+          <property name="topMargin">
+           <number>0</number>
+          </property>
+          <property name="rightMargin">
+           <number>0</number>
+          </property>
+          <item>
+           <widget class="QLabel" name="label_12">
+            <property name="text">
+             <string>Binary Log (replay) Filename:</string>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QLineEdit" name="gpsBinLogOpenEdit">
+            <property name="text">
+             <string>/home/</string>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QPushButton" name="selFileBtn">
+            <property name="text">
+             <string>Select...</string>
+            </property>
+           </widget>
+          </item>
+         </layout>
+        </item>
+        <item>
          <layout class="QHBoxLayout" name="horizontalLayout_4">
           <property name="topMargin">
            <number>0</number>
@@ -765,6 +799,20 @@
            <widget class="QPushButton" name="disconnectBtn">
             <property name="text">
              <string>Disconnect</string>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QPushButton" name="replayGPSBtn">
+            <property name="text">
+             <string>Replay GPS Log</string>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QPushButton" name="stopReplayBtn">
+            <property name="text">
+             <string>Stop Replay</string>
             </property>
            </widget>
           </item>

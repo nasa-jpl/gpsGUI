@@ -49,6 +49,11 @@ GpsGui::GpsGui(QWidget *parent)
 
     connect(gpsThread, &QThread::finished, gps, &QObject::deleteLater);
 
+    fileReader = new gpsBinaryFileReader();
+    replayThread = new QThread(this);
+    fileReader->moveToThread(replayThread);
+    connect(replayThread, &QThread::finished, fileReader, &QObject::deleteLater);
+
 
     connect(this, SIGNAL(connectToGPS(QString,int,QString)), gps, SLOT(connectToGPS(QString,int,QString)));
     connect(this, SIGNAL(disconnectFromGPS()), gps, SLOT(disconnectFromGPS()));
@@ -62,6 +67,14 @@ GpsGui::GpsGui(QWidget *parent)
     connect(this, SIGNAL(setBinaryLogFilename(QString)), gps, SLOT(setBinaryLoggingFilename(QString)));
     gpsThread->start();
 
+    connect(this, SIGNAL(setBinaryLogReplayFilename(QString)), fileReader, SLOT(setFilename(QString)));
+    connect(fileReader, SIGNAL(haveErrorMessage(QString)), this, SLOT(handleErrorMessage(QString)));
+    connect(fileReader, SIGNAL(haveStatusMessage(QString)), this, SLOT(handleGPSStatusMessage(QString)));
+    connect(fileReader, SIGNAL(haveGPSMessage(gpsMessage)), this, SLOT(receiveGPSMessage(gpsMessage)));
+    connect(this, SIGNAL(startGPSReplay()), fileReader, SLOT(beginWork()));
+    connect(this, SIGNAL(stopGPSReplay()), fileReader, SLOT(stopWork()));
+    replayThread->start();
+
     ui->gpsPort->setValidator( new QIntValidator(0,65535,this) );
 
     gpsMessageHeartbeat.setInterval(500); // half second, expected is 5ms.
@@ -72,9 +85,14 @@ GpsGui::GpsGui(QWidget *parent)
 
 GpsGui::~GpsGui()
 {
+    fileReader->keepGoing = false;
+
+    replayThread->quit();
+    replayThread->wait();
 
     gpsThread->quit();
     gpsThread->wait();
+
     delete ui;
 }
 
@@ -86,6 +104,7 @@ void GpsGui::showStatusMessage(QString s)
 void GpsGui::handleGPSStatusMessage(QString message)
 {
     showStatusMessage(message);
+    ui->logViewer->appendPlainText(message);
 }
 
 void GpsGui::handleGPSDataString(QString gpsString)
@@ -491,6 +510,11 @@ void GpsGui::handleGPSTimeout()
     ui->statusHeartbeatLED->setState(QLedLabel::StateError);
 }
 
+void GpsGui::handleErrorMessage(QString errorMessage)
+{
+    ui->logViewer->appendPlainText(errorMessage);
+}
+
 void GpsGui::on_clearErrorBtn_clicked()
 {
     ui->statusConnectionLED->setState(QLedLabel::StateOk);
@@ -500,4 +524,36 @@ void GpsGui::on_clearErrorBtn_clicked()
     ui->statusHeartbeatLED->setState(QLedLabel::StateOk);
     gpsMessageHeartbeat.start();
     ui->statusbar->showMessage("NOTE: Resetting error and warning LEDs", 2000);
+}
+
+void GpsGui::on_selFileBtn_clicked()
+{
+    QString filename;
+    filename = QFileDialog::getOpenFileName(this,
+        tr("Open Binary GPS Log"), "/home", tr("Log Files (*.txt *.log *.bin)"));
+    if(!filename.isEmpty())
+    {
+        ui->gpsBinLogOpenEdit->setText(filename);
+        emit setBinaryLogReplayFilename(ui->gpsBinLogOpenEdit->text());
+    }
+}
+
+void GpsGui::on_replayGPSBtn_clicked()
+{
+    //emit setBinaryLogReplayFilename(ui->gpsBinLogOpenEdit->text());
+    emit startGPSReplay();
+}
+
+void GpsGui::on_gpsBinLogOpenEdit_editingFinished()
+{
+    if(!ui->gpsBinLogOpenEdit->text().isEmpty())
+    {
+        emit setBinaryLogReplayFilename(ui->gpsBinLogOpenEdit->text());
+    }
+}
+
+void GpsGui::on_stopReplayBtn_clicked()
+{
+    fileReader->keepGoing = false;
+    emit stopGPSReplay();
 }

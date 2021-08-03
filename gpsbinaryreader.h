@@ -62,6 +62,7 @@ struct gpsMessage {
     dword counter = 0;
 
     dword claimedMessageSum = 0;
+    dword calculatedChecksum = 0;
 
     //////////////////////
     //

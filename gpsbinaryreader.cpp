@@ -813,6 +813,10 @@ void gpsBinaryReader::getMessageSum()
     }
 
     messageSum = sum;
+    m.calculatedChecksum = sum;
+    // Nominal size: usually 392, once per second 397 and 438 bytes. The -4 is because the checksum
+    // does not include the size of the sum.
+    //qDebug() << "Byte Array length: " << rawData.length() << ", length-4: " << rawData.length()-4;
 }
 
 // Public Access Functions:

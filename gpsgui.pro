@@ -20,6 +20,7 @@ QMAKE_CXXFLAGS += -Wno-class-memaccess
 linux:LIBS += -lqcustomplot
 
 SOURCES += \
+    gpsbinaryfilereader.cpp \
     gpsbinarylogger.cpp \
     gpsbinaryreader.cpp \
     gpsnetwork.cpp \
@@ -28,6 +29,7 @@ SOURCES += \
     qledlabel.cpp
 
 HEADERS += \
+    gpsbinaryfilereader.h \
     gpsbinarylogger.h \
     gpsbinaryreader.h \
     gpsgui.h \
