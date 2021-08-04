@@ -20,8 +20,12 @@ gpsBinaryFileReader::~gpsBinaryFileReader()
 void gpsBinaryFileReader::beginWork()
 {
     // entry point from outside.
+    if(fileOpen)
+        return;
     keepGoing = true;
     startProcessFile();
+    closeFile();
+    messagesRead = 0;
 }
 
 void gpsBinaryFileReader::stopWork()
@@ -39,6 +43,7 @@ void gpsBinaryFileReader::startProcessFile()
     if(!fileOpen)
         return;
 
+    emit haveStatusMessage(QString("Starting to read file [%1]").arg(filename));
     while(ok && keepGoing)
     {
 
@@ -132,7 +137,12 @@ uint16_t gpsBinaryFileReader::readV5header()
     // Position in file for total telegram size data (a 2-byte "word"):
     offset = 17;
 
-    return (unsigned char)rawData[offset+1] | ((unsigned char)rawData[offset+0] << 8);
+    uint16_t messageSizeAsRead = (unsigned char)rawData[offset+1] | ((unsigned char)rawData[offset+0] << 8);
+
+    if (messageSizeAsRead > maximumMessageSize)
+        return maximumMessageSize;
+
+    return messageSizeAsRead;
 
 }
 
@@ -199,6 +209,7 @@ void gpsBinaryFileReader::closeFile()
             emit haveErrorMessage(QString("Error closing binary gps file [%1]: %2").arg(filename).arg(lastFileError));
         }
 
+        binFilePtr = NULL;
         fileOpen = false;
     }
 }
