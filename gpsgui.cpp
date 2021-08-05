@@ -270,7 +270,10 @@ void GpsGui::receiveGPSMessage(gpsMessage m)
         if(doLabelUpdate)
         {
             ui->groundSpeedDataLabel->setText(QString("%1").arg(m.speedOverGround * 1.94384));
-            emit sendMapRotation(m.courseOverGround);
+            if(m.speedOverGround > 0.1)
+            {
+                emit sendMapRotation(m.courseOverGround);
+            }
         }
         if(doPlotUpdate)
         {
