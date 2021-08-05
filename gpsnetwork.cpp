@@ -8,7 +8,7 @@ gpsNetwork::gpsNetwork(QObject *parent) : QObject(parent)
     tcpsocket = new QTcpSocket(this);
 
     dataIn.setDevice(tcpsocket);
-    dataIn.setVersion(QDataStream::Qt_5_12);
+    //dataIn.setVersion(QDataStream::);
 
     connect(tcpsocket, SIGNAL(error(QAbstractSocket::SocketError)), this, SLOT(handleError(QAbstractSocket::SocketError)));
     connect(tcpsocket, &QIODevice::readyRead, this, &gpsNetwork::readData);

@@ -52,6 +52,7 @@ class GpsGui : public QMainWindow
     QVector<double> nVelos;
     QVector<double> eVelos;
     QVector<double> upVelos;
+    QVector<double> groundVelos;
 
     // time axis:
     QVector<double> timeAxis;

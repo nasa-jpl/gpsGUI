@@ -1,7 +1,7 @@
 QT       += core gui network svg
 
 greaterThan(QT_MAJOR_VERSION, 4): QT += widgets
-
+QT += printsupport
 CONFIG += c++11
 
 # The following define makes your compiler emit warnings if you use
@@ -41,9 +41,9 @@ FORMS += \
 
 include(qfi/qfi.pri)
 
-!linux:SOURCES += ../qcustomplot/qcustomplot.cpp
-!linux:HEADERS += ../qcustomplot/qcustomplot.h
-!linux:INCLUDEPATH += ../qcustomplot
+#!linux:SOURCES += ../qcustomplot/qcustomplot.cpp
+#!linux:HEADERS += ../qcustomplot/qcustomplot.h
+#!linux:INCLUDEPATH += ../qcustomplot
 
 # Default rules for deployment.
 qnx: target.path = /tmp/$${TARGET}/bin

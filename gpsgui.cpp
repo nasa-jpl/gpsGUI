@@ -19,6 +19,7 @@ GpsGui::GpsGui(QWidget *parent)
     nVelos.resize(vecSize);
     eVelos.resize(vecSize);
     upVelos.resize(vecSize);
+    groundVelos.resize(vecSize);
     timeAxis.resize(vecSize);
 
     preparePlots();
@@ -263,6 +264,11 @@ void GpsGui::receiveGPSMessage(gpsMessage m)
         {
             ui->groundSpeedDataLabel->setText(QString("%1").arg(m.speedOverGround * 1.94384));
         }
+        if(doPlotUpdate)
+        {
+            groundVelos.push_front(m.speedOverGround);
+            groundVelos.pop_back();
+        }
     }
     if(m.haveSpeedData)
     {
@@ -406,7 +412,18 @@ void GpsGui::setPlotTitle(QCustomPlot *p, QString title)
 {
 
     p->plotLayout()->insertRow(0);
+
+#if QCUSTOMPLOT_VERSION < 0x020001
+
+    // Earlier QCP versions:
+    p->plotLayout()->addElement(0, 0, new QCPPlotTitle(p, title));
+#else
+
+    // QCP 2.0:
     p->plotLayout()->addElement(0, 0, new QCPTextElement(p, title, QFont("sans", 8, QFont::Bold)));
+#endif
+
+
 }
 
 void GpsGui::setTimeAxis(QCPAxis *x)
@@ -449,6 +466,7 @@ void GpsGui::updatePlots()
     ui->plotSpeed->graph(0)->setData(timeAxis, nVelos);
     ui->plotSpeed->graph(1)->setData(timeAxis, eVelos);
     ui->plotSpeed->graph(2)->setData(timeAxis, upVelos);
+    ui->plotSpeed->graph(3)->setData(timeAxis, groundVelos);
 
     ui->plotLatLong->replot();
     ui->plotAltitude->replot();

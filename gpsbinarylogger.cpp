@@ -84,6 +84,7 @@ void gpsBinaryLogger::closeFileWriting()
             {
                 emit haveStatusMessage(QString("Warning, gps binary logger closed file with status %1 and error %2.").arg(rtnValue).arg(lastFileIOError));
             }
+            fileWritePtr = NULL;
         } else {
             // class destructor calls here too, maybe disable warning.
             emit haveStatusMessage(QString("Warning, file pointer was already closed!!"));
