@@ -92,6 +92,7 @@ signals:
     void startGPSReplay();
     void stopGPSReplay();
     void sendMapCoordinates(double lat, double lng);
+    void sendMapRotation(float angle);
 
 private slots:
     void handleGPSStatusMessage(QString message);

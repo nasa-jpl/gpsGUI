@@ -26,3 +26,16 @@ void mapView::handleMapUpdatePosition(double lat, double lng){
                                 Q_ARG(QVariant, posy));
     }
 }
+
+void mapView::handleMapUpdateRotation(float angle){
+    QQuickItem *item = ui->mapQuickWidget->rootObject();
+    QObject *object;
+    object = item->findChild<QObject *>("mapItem");
+    QVariant rotationDegrees = QVariant(angle);
+
+
+    if (object != NULL) {
+      QMetaObject::invokeMethod(object, "rotate", Q_ARG(QVariant, rotationDegrees));
+    }
+}
+

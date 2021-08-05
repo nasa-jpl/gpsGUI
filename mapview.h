@@ -21,6 +21,7 @@ public:
 
 public slots:
     void handleMapUpdatePosition(double lat, double lng);
+    void handleMapUpdateRotation(float angle);
 
 private:
     Ui::mapView *ui;

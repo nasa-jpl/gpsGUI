@@ -85,7 +85,7 @@ GpsGui::GpsGui(QWidget *parent)
     map = new mapView();
 
     connect(this, SIGNAL(sendMapCoordinates(double,double)), map, SLOT(handleMapUpdatePosition(double,double)));
-
+    connect(this, SIGNAL(sendMapRotation(float)), map, SLOT(handleMapUpdateRotation(float)));
 }
 
 GpsGui::~GpsGui()
@@ -270,6 +270,7 @@ void GpsGui::receiveGPSMessage(gpsMessage m)
         if(doLabelUpdate)
         {
             ui->groundSpeedDataLabel->setText(QString("%1").arg(m.speedOverGround * 1.94384));
+            emit sendMapRotation(m.courseOverGround);
         }
         if(doPlotUpdate)
         {
