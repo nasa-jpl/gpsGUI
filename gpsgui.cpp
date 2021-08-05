@@ -82,6 +82,10 @@ GpsGui::GpsGui(QWidget *parent)
 
     connect(&gpsMessageHeartbeat, SIGNAL(timeout()), this, SLOT(handleGPSTimeout()));
 
+    map = new mapView();
+
+    connect(this, SIGNAL(sendMapCoordinates(double,double)), map, SLOT(handleMapUpdatePosition(double,double)));
+
 }
 
 GpsGui::~GpsGui()
@@ -236,6 +240,9 @@ void GpsGui::receiveGPSMessage(gpsMessage m)
             ui->latitudeDataLabel->setText(QString("%1").arg(m.latitude, 0, 'f', 8));
             ui->longitudeDataLabel->setText(QString("%1").arg(longitude, 0, 'f', 8));
             ui->altitudeDataLabel->setText(QString("%1").arg(m.altitude, 0, 'f', 7));
+
+            emit sendMapCoordinates(m.latitude, longitude);
+
         }
         ui->EADI->setAltitude(m.altitude);
 
@@ -404,7 +411,7 @@ void GpsGui::preparePlots()
     ui->plotSpeed->graph(2)->setPen(QPen(Qt::yellow));
     ui->plotSpeed->graph(3)->setPen(QPen(Qt::green));
 
-    setPlotColors(ui->plotHeading, true);
+    setPlotColors(ui->plotHeading, false);
 
 }
 
@@ -575,4 +582,9 @@ void GpsGui::on_stopReplayBtn_clicked()
 {
     fileReader->keepGoing = false;
     emit stopGPSReplay();
+}
+
+void GpsGui::on_showMapBtn_clicked()
+{
+    map->show();
 }

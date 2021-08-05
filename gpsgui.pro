@@ -2,6 +2,8 @@ QT       += core gui network svg
 
 greaterThan(QT_MAJOR_VERSION, 4): QT += widgets
 QT += printsupport
+QT += quickwidgets
+
 CONFIG += c++11
 
 # The following define makes your compiler emit warnings if you use
@@ -26,6 +28,7 @@ SOURCES += \
     gpsnetwork.cpp \
     main.cpp \
     gpsgui.cpp \
+    mapview.cpp \
     qledlabel.cpp
 
 HEADERS += \
@@ -34,10 +37,12 @@ HEADERS += \
     gpsbinaryreader.h \
     gpsgui.h \
     gpsnetwork.h \
+    mapview.h \
     qledlabel.h
 
 FORMS += \
-    gpsgui.ui
+    gpsgui.ui \
+    mapview.ui
 
 include(qfi/qfi.pri)
 
@@ -49,3 +54,6 @@ include(qfi/qfi.pri)
 qnx: target.path = /tmp/$${TARGET}/bin
 else: unix:!android: target.path = /opt/$${TARGET}/bin
 !isEmpty(target.path): INSTALLS += target
+
+RESOURCES += \
+    resource.qrc
