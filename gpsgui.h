@@ -93,6 +93,8 @@ signals:
     void stopGPSReplay();
     void sendMapCoordinates(double lat, double lng);
     void sendMapRotation(float angle);
+    void startSecondaryLog(QString secondaryLogFilename);
+    void stopSecondaryLog();
 
 private slots:
     void handleGPSStatusMessage(QString message);
@@ -119,6 +121,10 @@ private slots:
     void on_stopReplayBtn_clicked();
 
     void on_showMapBtn_clicked();
+
+    void on_startSecondLogBtn_clicked();
+
+    void on_stopSecondLogBtn_clicked();
 
 private:
     Ui::GpsGui *ui;

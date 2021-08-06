@@ -14,12 +14,23 @@ gpsNetwork::gpsNetwork(QObject *parent) : QObject(parent)
     connect(tcpsocket, &QIODevice::readyRead, this, &gpsNetwork::readData);
     connect(tcpsocket, SIGNAL(connected()), this, SLOT(setConnected()));
 
-    connect(&binLogger, &gpsBinaryLogger::haveFileIOError, this, &gpsNetwork::handleBinaryLoggingErrorNumber);
-    connect(&binLogger, &gpsBinaryLogger::haveStatusMessage, this, &gpsNetwork::handleBinaryLoggingStatusMessage);
+    connect(&binLoggerPrimary, &gpsBinaryLogger::haveFileIOError, this, &gpsNetwork::handleBinaryLoggingErrorNumber);
+    connect(&binLoggerPrimary, &gpsBinaryLogger::haveStatusMessage, this, &gpsNetwork::handleBinaryLoggingStatusMessage);
 
-    connect(this, &gpsNetwork::haveBinaryLoggingFilename, &binLogger, &gpsBinaryLogger::setFilename);
+    connect(&binLoggerSecondary, &gpsBinaryLogger::haveFileIOError, this, &gpsNetwork::handleBinaryLoggingErrorNumber);
+    connect(&binLoggerSecondary, &gpsBinaryLogger::haveStatusMessage, this, &gpsNetwork::handleBinaryLoggingStatusMessage);
 
-    binLogger.setFilename("/tmp/gps.log"); // temporary filename
+    connect(this, &gpsNetwork::haveBinaryLoggingFilenamePrimary, &binLoggerPrimary, &gpsBinaryLogger::setFilename);
+    connect(this, &gpsNetwork::haveBinaryLoggingFilenameSecondary, &binLoggerSecondary, &gpsBinaryLogger::setFilename);
+
+    connect(this, &gpsNetwork::startSecondaryBinaryLog, &binLoggerSecondary, &gpsBinaryLogger::beginLogToFilenameNow);
+    connect(this, &gpsNetwork::sendStopSecondaryBinaryLog, &binLoggerSecondary, &gpsBinaryLogger::stopLogging);
+
+
+    binLoggerPrimary.setFilename("/tmp/gps_DEFAULTFILENAME_primary.log"); // temporary filename
+
+    binLoggerSecondary.setPrimaryLogStatus(false);
+    binLoggerSecondary.setFilename("/tmp/gps_DEFAULTFILENAME_secondary.log");
 
 }
 
@@ -28,7 +39,7 @@ gpsNetwork::~gpsNetwork()
     this->disconnectFromGPS();
     delete tcpsocket;
 
-    binLogger.stopLogging();
+    binLoggerPrimary.stopLogging();
 }
 
 void gpsNetwork::setGPSHost(QString gpsHost, int gpsPort)
@@ -53,8 +64,8 @@ void gpsNetwork::connectToGPS(QString gpsHost, int gpsPort, QString gpsBinaryLog
 {
     // Public slot to start connection
 
-    binLogger.setFilename(gpsBinaryLogFilename);
-    binLogger.startLogging();
+    binLoggerPrimary.setFilename(gpsBinaryLogFilename);
+    binLoggerPrimary.startLogging();
 
     this->gpsHost = gpsHost;
     this->gpsPort = gpsPort;
@@ -68,12 +79,33 @@ void gpsNetwork::connectToGPS()
     // Public slot to start connection
     // Do not use this function, it is for testing only.
     this->createConnection();
-    binLogger.startLogging();
+    binLoggerPrimary.startLogging();
 }
 
-void gpsNetwork::setBinaryLoggingFilename(QString binLogFilename)
+void gpsNetwork::setBinaryLoggingFilenamePrimary(QString binLogFilename)
 {
-    emit haveBinaryLoggingFilename(binLogFilename);
+    emit haveBinaryLoggingFilenamePrimary(binLogFilename);
+}
+
+void gpsNetwork::setBinaryLoggingFilenameSecondary(QString binLogFilenameSecondary)
+{
+    // This function only sets the secondary filename,
+    // it does NOT start or stop the log.
+    // You should probably not use this function.
+    emit haveBinaryLoggingFilenameSecondary(binLogFilenameSecondary);
+}
+
+void gpsNetwork::beginSecondaryBinaryLog(QString secondaryLogFilename)
+{
+    // This function will set the filename for the secondary log,
+    // and, will begin logging. If an existing secondary log
+    // is already going, that log will be closed and a new one started.
+    startSecondaryBinaryLog(secondaryLogFilename);
+}
+
+void gpsNetwork::stopSecondaryBinaryLog()
+{
+    emit sendStopSecondaryBinaryLog();
 }
 
 bool gpsNetwork::createConnection()
@@ -99,22 +131,13 @@ void gpsNetwork::readData()
 
     // Begin decoding in the reader:
 
-    binLogger.insertData(data); // log to binary file
+    binLoggerPrimary.insertData(data); // log to binary file
+    binLoggerSecondary.insertData(data); // secondary log
     reader.insertData(data);
 
-    //messageKinds gpsMsgType = reader.getMessageType();
     gpsMessage m = reader.getMessage(); // copy of entire message
 
     //reader.debugThis();
-
-    //gpsdataString.append(QString(", Data type: %1, version %2, counter: %3, Heading: ").arg(gpsMsgType).arg(reader.getVersion()).arg(reader.getCounter()));
-    //gpsdataString.append(reader.debugString());
-    //gpsdataString.append(QString(", Heading: %1, Roll: %2, Pitch: %3").arg(reader.getHeading(), 4, 'f', 2).arg(reader.getRoll(), 4, 'f', 2).arg(reader.getPitch(), 4, 'f', 2));
-    //gpsdataString.append(QString(", long: %1, lat: %2, alt: %3").arg(m.longitude).arg(m.latitude).arg(m.altitude));
-
-    // For the ASCII modes, thsi is good for debug:
-    //gpsdataString = QString::fromLocal8Bit(data);
-    //gpsdataString = gpsdataString.trimmed();
 
     //emit haveGPSString(gpsdataString);
     emit haveGPSMessage(m);
@@ -152,11 +175,13 @@ void gpsNetwork::handleError(QAbstractSocket::SocketError e)
 void gpsNetwork::handleBinaryLoggingErrorNumber(int errorNum)
 {
     qDebug() << __PRETTY_FUNCTION__ << "Binary log error number: " << errorNum;
+    emit haveGPSString(QString("Binary log file I/O error: [%1].").arg(errorNum));
 }
 
 void gpsNetwork::handleBinaryLoggingStatusMessage(QString errorString)
 {
     qDebug() << __PRETTY_FUNCTION__ << "Binary log error string: " << errorString;
+    emit haveGPSString(errorString);
 }
 
 bool gpsNetwork::checkConnected()

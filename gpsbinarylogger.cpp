@@ -9,6 +9,7 @@ gpsBinaryLogger::gpsBinaryLogger()
     setupBuffer();
     loggingAllowed = false;
     fileIsOpen = false;
+    amWritingFile = false;
 }
 
 gpsBinaryLogger::~gpsBinaryLogger()
@@ -21,12 +22,20 @@ gpsBinaryLogger::~gpsBinaryLogger()
     // done
 }
 
+void gpsBinaryLogger::setPrimaryLogStatus(bool isPrimaryLog)
+{
+    // This variable isn't used yet but could be useful for debugging.
+    this->isPrimaryLog = isPrimaryLog;
+}
+
 void gpsBinaryLogger::startLogging()
 {
     openFileWriting();
     if(lastFileIOError==0)
     {
         loggingAllowed = true;
+    } else {
+        emit haveStatusMessage(QString("Error, logging not allowed. lastFileIOError: %1").arg(lastFileIOError));
     }
 }
 
@@ -35,6 +44,16 @@ void gpsBinaryLogger::stopLogging()
     writeBufferToFile(); // finish writing if needed
     closeFileWriting(); // close file
     loggingAllowed = false;
+}
+
+void gpsBinaryLogger::beginLogToFilenameNow(QString filename)
+{
+    // This function will set the filename, stop any current logging,
+    // and begin logging to the new filename.
+
+    this->stopLogging();
+    this->setFilename(filename);
+    this->startLogging();
 
 }
 
@@ -60,7 +79,7 @@ void gpsBinaryLogger::openFileWriting()
             emit haveStatusMessage(QString("Error, file pointer was already open!!"));
             return;
         }
-        fileWritePtr = fopen(filename.toStdString().c_str() ,"wb");
+        fileWritePtr = fopen(filename.toStdString().c_str() ,"ab"); // Append mode, for safety.
         if(fileWritePtr == NULL)
         {
             emit haveStatusMessage(QString("Error, filename pointer is NULL, cannot write GPS data to file [%1]!!").arg(filename));
@@ -83,11 +102,17 @@ void gpsBinaryLogger::closeFileWriting()
             if(rtnValue != 0)
             {
                 emit haveStatusMessage(QString("Warning, gps binary logger closed file with status %1 and error %2.").arg(rtnValue).arg(lastFileIOError));
+            } else {
+                // If the fclose function returns zero, then there is not a file error,
+                // and, any reported error at this point is not meaningful.
+                // Therefore, we clear the errors:
+                clearerr(fileWritePtr);
+                lastFileIOError = 0;
             }
             fileWritePtr = NULL;
         } else {
             // class destructor calls here too, maybe disable warning.
-            emit haveStatusMessage(QString("Warning, file pointer was already closed!!"));
+            emit haveStatusMessage(QString("Closing GPS binary log file: Warning, file pointer was already closed!!"));
         }
         fileIsOpen = false;
     }
@@ -110,7 +135,11 @@ void gpsBinaryLogger::writeBufferToFile()
         return;
     }
 
-    // Each byte array may be of different sizes, thus, we must check each one:
+    // This is a simplistic lock.
+    while(amWritingFile)
+    {
+        usleep(200);
+    }
     std::lock_guard<std::mutex>lockfile(fileMutex);
     std::lock_guard<std::mutex>lockbuffer(bufferMutex);
 
@@ -163,16 +192,20 @@ void gpsBinaryLogger::insertData(QByteArray raw)
 {
     if(raw.isEmpty())
         return;
-    std::unique_lock<std::mutex>buffLock(bufferMutex);
 
-    messageCount++;
-    buffer.push_back(raw);
+    if(loggingAllowed)
+    {
+        std::unique_lock<std::mutex>buffLock(bufferMutex);
 
-    int count = buffer.size();
+        messageCount++;
+        buffer.push_back(raw);
 
-    buffLock.unlock();
-    if(count >= idealBufferSize)
-        writeBufferToFile();
+        int count = buffer.size();
+
+        buffLock.unlock();
+        if(count >= idealBufferSize)
+            writeBufferToFile();
+    }
 }
 
 uint16_t gpsBinaryLogger::getBufferSize()
@@ -190,6 +223,8 @@ void gpsBinaryLogger::setFilename(QString filename)
     {
         this->filename = filename;
         filenameSet = true;
+    } else {
+        emit haveStatusMessage("Error, filename set was empty.");
     }
 }
 

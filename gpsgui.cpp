@@ -65,7 +65,11 @@ GpsGui::GpsGui(QWidget *parent)
     connect(gps, SIGNAL(connectionGood()), this, SLOT(handleGPSConnectionGood()));
 
     connect(gps, SIGNAL(haveGPSMessage(gpsMessage)), this, SLOT(receiveGPSMessage(gpsMessage)));
-    connect(this, SIGNAL(setBinaryLogFilename(QString)), gps, SLOT(setBinaryLoggingFilename(QString)));
+    //connect(this, SIGNAL(setBinaryLogFilename(QString)), gps, SLOT(setBinaryLoggingFilename(QString)));
+
+    connect(this, SIGNAL(startSecondaryLog(QString)), gps, SLOT(beginSecondaryBinaryLog(QString)));
+    connect(this, SIGNAL(stopSecondaryLog()), gps, SLOT(stopSecondaryBinaryLog()));
+
     gpsThread->start();
 
     connect(this, SIGNAL(setBinaryLogReplayFilename(QString)), fileReader, SLOT(setFilename(QString)));
@@ -264,7 +268,8 @@ void GpsGui::receiveGPSMessage(gpsMessage m)
 
     if(m.haveCourseSpeedGroundData)
     {
-        ui->EHSI->setCourse(m.courseOverGround);
+        if(m.speedOverGround > 0.1)
+            ui->EHSI->setCourse(m.courseOverGround);
         ui->EADI->setAirspeed(m.speedOverGround);
         ui->airSpeedIndicator->setAirspeed(m.speedOverGround * 1.94384); // 1 meter per second = 1.94384 knots
         if(doLabelUpdate)
@@ -591,4 +596,17 @@ void GpsGui::on_stopReplayBtn_clicked()
 void GpsGui::on_showMapBtn_clicked()
 {
     map->show();
+}
+
+void GpsGui::on_startSecondLogBtn_clicked()
+{
+    if(!ui->secondaryLogEdit->text().isEmpty())
+    {
+        emit startSecondaryLog(ui->secondaryLogEdit->text());
+    }
+}
+
+void GpsGui::on_stopSecondLogBtn_clicked()
+{
+    emit stopSecondaryLog();
 }

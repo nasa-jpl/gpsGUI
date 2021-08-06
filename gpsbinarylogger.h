@@ -1,6 +1,8 @@
 #ifndef GPSBINARYLOGGER_H
 #define GPSBINARYLOGGER_H
 
+#include <unistd.h>
+
 #include <vector>
 #include <mutex>
 
@@ -23,6 +25,7 @@ class gpsBinaryLogger : public QObject
     bool fileIsOpen = false;
     bool filenameSet = false;
     bool loggingAllowed = false;
+    volatile bool isPrimaryLog = false;
     int lastFileIOError = 0;
     uint16_t idealBufferSize;
     uint64_t messageCount = 0;
@@ -42,8 +45,10 @@ public:
 
 public slots:
     void setFilename(QString filename);
+    void setPrimaryLogStatus(bool isPrimaryLog);
     void startLogging();
     void stopLogging();
+    void beginLogToFilenameNow(QString filename);
     void insertData(QByteArray raw);
     void getFilenameSetStatus();
     void getLifetimeMessageCount();

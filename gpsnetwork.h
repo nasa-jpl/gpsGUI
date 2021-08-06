@@ -19,7 +19,8 @@ class gpsNetwork : public QObject
     QDataStream dataIn;
 
     gpsBinaryReader reader;
-    gpsBinaryLogger binLogger;
+    gpsBinaryLogger binLoggerPrimary;
+    gpsBinaryLogger binLoggerSecondary;
 
     bool createConnection();
 
@@ -37,10 +38,14 @@ public:
 
 public slots:
     void setGPSHost(QString gpsHost, int gpsPort);
-    void connectToGPS(QString gpsHost, int gpsPort, QString gpsBinaryLogFilename);
+    void connectToGPS(QString gpsHost, int gpsPort, QString gpsBinaryPrimaryLogFilename);
+    //void changePrimaryLogFilename(QString primaryLogFilename);
+    void beginSecondaryBinaryLog(QString secondaryLogFilename); // Entry point to start 2nd logger.
+    void stopSecondaryBinaryLog();
     void connectToGPS();
     void disconnectFromGPS();
-    void setBinaryLoggingFilename(QString binLogFilename);
+    void setBinaryLoggingFilenamePrimary(QString binLogFilename); // TODO: Allow to "change" existing log
+    void setBinaryLoggingFilenameSecondary(QString binLogFilename);
     void debugThis();
 
     // Binary logging slots:
@@ -53,8 +58,10 @@ signals:
     void connectionGood();
     void haveGPSString(QString);
     void haveGPSMessage(gpsMessage);
-    void haveBinaryLoggingFilename(QString binLogFilename);
-
+    void haveBinaryLoggingFilenamePrimary(QString binLogFilenamePrimary);
+    void haveBinaryLoggingFilenameSecondary(QString binLogFilenameSecondary);
+    void startSecondaryBinaryLog(QString secondaryLogFilename);
+    void sendStopSecondaryBinaryLog();
 };
 
 #endif // GPSNETWORK_H
