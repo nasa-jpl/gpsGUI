@@ -864,19 +864,19 @@ QString gpsBinaryReader::debugString()
 void gpsBinaryReader::debugThis()
 {
     // Place any desired debug functions here:
-//    qDebug() << "---------- New Data Dump: ----------";
-//    qDebug() << "Counter: " << getCounter();
-//    printBinary(rawData);
+    //    qDebug() << "---------- New Data Dump: ----------";
+    //    qDebug() << "Counter: " << getCounter();
+    //    printBinary(rawData);
 
     printMessage();
-//    qDebug() << "Nav Data Block Bitmask: ";
-//    printBinary(m.navDataBlockBitmask);
+    //    qDebug() << "Nav Data Block Bitmask: ";
+    //    printBinary(m.navDataBlockBitmask);
 
-//    qDebug() << "Extended Nav Data Block Bitmask: ";
-//    printBinary(m.extendedNavDataBlockBitmask);
+    //    qDebug() << "Extended Nav Data Block Bitmask: ";
+    //    printBinary(m.extendedNavDataBlockBitmask);
 
-//    qDebug() << "External Sensor Data Block Bitmask: ";
-//    printBinary(m.externDataBitMask);
+    //    qDebug() << "External Sensor Data Block Bitmask: ";
+    //    printBinary(m.externDataBitMask);
 }
 
 void gpsBinaryReader::printMessage(gpsMessage g)

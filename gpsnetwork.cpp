@@ -10,6 +10,12 @@ gpsNetwork::gpsNetwork(QObject *parent) : QObject(parent)
     dataIn.setDevice(tcpsocket);
     //dataIn.setVersion(QDataStream::);
 
+    binLoggerPrimary.setPrimaryLogStatus(true);
+    binLoggerPrimary.setFilename("/tmp/gps_DEFAULTFILENAME_primary.log"); // temporary filename
+
+    binLoggerSecondary.setPrimaryLogStatus(false);
+    binLoggerSecondary.setFilename("/tmp/gps_DEFAULTFILENAME_secondary.log");
+
     connect(tcpsocket, SIGNAL(error(QAbstractSocket::SocketError)), this, SLOT(handleError(QAbstractSocket::SocketError)));
     connect(tcpsocket, &QIODevice::readyRead, this, &gpsNetwork::readData);
     connect(tcpsocket, SIGNAL(connected()), this, SLOT(setConnected()));
@@ -25,12 +31,6 @@ gpsNetwork::gpsNetwork(QObject *parent) : QObject(parent)
 
     connect(this, &gpsNetwork::startSecondaryBinaryLog, &binLoggerSecondary, &gpsBinaryLogger::beginLogToFilenameNow);
     connect(this, &gpsNetwork::sendStopSecondaryBinaryLog, &binLoggerSecondary, &gpsBinaryLogger::stopLogging);
-
-
-    binLoggerPrimary.setFilename("/tmp/gps_DEFAULTFILENAME_primary.log"); // temporary filename
-
-    binLoggerSecondary.setPrimaryLogStatus(false);
-    binLoggerSecondary.setFilename("/tmp/gps_DEFAULTFILENAME_secondary.log");
 
 }
 
@@ -100,7 +100,7 @@ void gpsNetwork::beginSecondaryBinaryLog(QString secondaryLogFilename)
     // This function will set the filename for the secondary log,
     // and, will begin logging. If an existing secondary log
     // is already going, that log will be closed and a new one started.
-    startSecondaryBinaryLog(secondaryLogFilename);
+    emit startSecondaryBinaryLog(secondaryLogFilename);
 }
 
 void gpsNetwork::stopSecondaryBinaryLog()
@@ -120,7 +120,10 @@ bool gpsNetwork::createConnection()
 
 void gpsNetwork::readData()
 {
+    readingData.lock();
     QByteArray data;
+    QByteArray dataPrimary;
+    QByteArray dataSecondary;
 
     tcpsocket->startTransaction();
     data = tcpsocket->readAll();
@@ -130,22 +133,31 @@ void gpsNetwork::readData()
     gpsdataString = QString("Size: %1, start: 0x%2").arg(data.size()).arg((unsigned char)data.at(0), 2, 16, QChar('0'));
 
     // Begin decoding in the reader:
-
-    binLoggerPrimary.insertData(data); // log to binary file
-    binLoggerSecondary.insertData(data); // secondary log
-    reader.insertData(data);
-
+    reader.insertData(deepCopyData(data));
     gpsMessage m = reader.getMessage(); // copy of entire message
-
     //reader.debugThis();
+    if(m.validDecode)
+    {
+        dataPrimary = deepCopyData(data);
+        dataSecondary = deepCopyData(data);
+
+        binLoggerPrimary.insertData(dataPrimary); // log to binary file
+        binLoggerSecondary.insertData(dataSecondary); // secondary log
+    } else {
+        emit statusMessage(QString("WARNING: Bad GPS decode at counter %1. Error message: [%2] ").arg(m.counter).arg(m.lastDecodeErrorMessage));
+    }
 
     //emit haveGPSString(gpsdataString);
     emit haveGPSMessage(m);
+    readingData.unlock();
 }
 
 void gpsNetwork::handleError(QAbstractSocket::SocketError e)
 {
     QString errorString;
+    // The following is a prototype that we could use in the future
+    // to take actions on specific types of errors:
+
 //    switch(e)
 //    {
 //    case QAbstractSocket::ConnectionRefusedError:
@@ -180,13 +192,27 @@ void gpsNetwork::handleBinaryLoggingErrorNumber(int errorNum)
 
 void gpsNetwork::handleBinaryLoggingStatusMessage(QString errorString)
 {
-    qDebug() << __PRETTY_FUNCTION__ << "Binary log error string: " << errorString;
+    //qDebug() << __PRETTY_FUNCTION__ << "Binary log error string: " << errorString;
     emit haveGPSString(errorString);
 }
 
 bool gpsNetwork::checkConnected()
 {
     return connectedToHost;
+}
+
+QByteArray gpsNetwork::deepCopyData(const QByteArray data)
+{
+    // This function assures a copy is made at some annoying expense
+    uint16_t sourceLength = data.length();
+    QByteArray dest;
+    volatile char temp = 0;
+    for(int i=0; i < sourceLength; i++)
+    {
+        temp = data.at(i);
+        dest.append(temp);
+    }
+    return dest;
 }
 
 void gpsNetwork::debugThis()

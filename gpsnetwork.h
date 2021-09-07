@@ -1,6 +1,8 @@
 #ifndef GPSNETWORK_H
 #define GPSNETWORK_H
 
+#include <mutex>
+
 #include <QObject>
 #include <QTcpSocket>
 #include <QDataStream>
@@ -23,6 +25,8 @@ class gpsNetwork : public QObject
     gpsBinaryLogger binLoggerSecondary;
 
     bool createConnection();
+    std::mutex readingData;
+    QByteArray deepCopyData(const QByteArray data);
 
 private slots:
     // for the TCP socket:

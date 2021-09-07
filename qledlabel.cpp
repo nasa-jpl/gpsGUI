@@ -57,6 +57,7 @@ QLedLabel::QLedLabel(QWidget* parent) :
 
 void QLedLabel::setState(State state)
 {
+    ledLocker.lock();
     switch (state) {
     case StateOk:
         setStyleSheet(greenSS);
@@ -76,6 +77,7 @@ void QLedLabel::setState(State state)
         this->setText("");
         break;
     }
+    ledLocker.unlock();
 }
 
 void QLedLabel::setState(bool state)

@@ -2,10 +2,13 @@
 #define QLEDLABEL_H
 
 #include <QLabel>
+#include <QMutex>
 
 class QLedLabel : public QLabel
 {
     Q_OBJECT
+
+    QMutex ledLocker;
 public:
     explicit QLedLabel(QWidget* parent = 0);
 

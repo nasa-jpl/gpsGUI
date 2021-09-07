@@ -25,15 +25,24 @@ class gpsBinaryLogger : public QObject
     bool fileIsOpen = false;
     bool filenameSet = false;
     bool loggingAllowed = false;
+    bool closingLogOut = false;
     volatile bool isPrimaryLog = false;
+    QString logRankingStr;
     int lastFileIOError = 0;
     uint16_t idealBufferSize;
     uint64_t messageCount = 0;
 
-    std::mutex bufferMutex;
+    // Reusing a mutex in multiple places
+    // causes bad things to happen, thus:
+    std::mutex bufferReadAndClearMutex;
+    std::mutex bufferSizeMutex;
+    std::mutex bufferSetupMutex;
+    std::mutex bufferInsertMutex;
+
     std::vector<QByteArray> buffer;
 
-    std::mutex fileMutex;
+    std::mutex fileWriteMutex;
+    std::mutex fileCloseMutex;
     FILE *fileWritePtr = NULL;
     QString filename;
 
