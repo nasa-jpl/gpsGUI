@@ -16,7 +16,8 @@ public:
         StateOk,
         StateOkBlue,
         StateWarning,
-        StateError
+        StateError,
+        StateUnknown
     };
 
 
