@@ -1060,8 +1060,8 @@ void gpsBinaryReader::printMessage()
     {
         qDebug() << "--- have Speed Data (bit 9): ---";
         qDebug() << "northVelocity: " << m.northVelocity;
-        qDebug() << "northVelocity: " << m.northVelocity;
-        qDebug() << "northVelocity: " << m.northVelocity;
+        qDebug() << "eastVelocity: " << m.eastVelocity;
+        qDebug() << "upVelocity: " << m.upVelocity;
     }
 
     if(m.haveSpeedStdDev)
