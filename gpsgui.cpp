@@ -20,6 +20,7 @@ GpsGui::GpsGui(QWidget *parent)
     msgsReceivedCount = 0;
 
     headings.resize(vecSize);
+    courses.resize(vecSize);
     rolls.resize(vecSize);
     pitches.resize(vecSize);
     lats.resize(vecSize);
@@ -398,6 +399,12 @@ void GpsGui::receiveGPSMessage(gpsMessage m)
             headings.push_front(m.heading);
             headings.pop_back();
 
+            if(m.haveCourseSpeedGroundData)
+            {
+                courses.push_front(m.courseOverGround);
+                courses.pop_back();
+            }
+
             rolls.push_front(m.roll);
             rolls.pop_back();
 
@@ -586,14 +593,24 @@ void GpsGui::preparePlots()
 
     ui->plotPitch->addGraph();
     ui->plotRoll->addGraph();
-    ui->plotHeading->addGraph();
+
+    ui->plotHeading->addGraph(); // magnetic
+    ui->plotHeading->addGraph(0,0); // course
+    ui->plotHeading->graph(0)->setName("Magnetic");
+    ui->plotHeading->graph(1)->setName("Course");
+    ui->plotHeading->yAxis->setRange(0, 360*1.1); // raw data is 0-360 but we will show it like this.
+    ui->plotHeading->graph(0)->setPen(QPen(Qt::blue));
+    ui->plotHeading->graph(1)->setPen(QPen(Qt::red));
+    ui->plotHeading->axisRect()->insetLayout()->setInsetAlignment(0, Qt::AlignLeft|Qt::AlignTop);
+    ui->plotHeading->legend->setBrush(QColor("#85ffffff")); // 85% opaque white
+    ui->plotHeading->legend->setVisible(true);
 
     // Y-Axis Range:
     //ui->plotLatLong->yAxis->setRange(-90*1.1, 90*1.1); // Lat
     ui->plotLatLong->yAxis->setRange(-360*1.25, 360*1.25); // Lat
 
     //ui->plotLatLong->yAxis2->setRange(0, 360*1.25); // Long
-    ui->plotLatLong->addGraph(ui->plotLatLong->xAxis, ui->plotLatLong->yAxis ); // Lat
+    //ui->plotLatLong->addGraph(ui->plotLatLong->xAxis, ui->plotLatLong->yAxis ); // Lat
     //ui->plotLatLong->addGraph(ui->plotLatLong->yAxis2, ui->plotLatLong->xAxis ); // Long
     ui->plotLatLong->addGraph(ui->plotLatLong->xAxis, ui->plotLatLong->yAxis ); // Long
 
@@ -601,11 +618,10 @@ void GpsGui::preparePlots()
 
     ui->plotAltitude->yAxis->setRange(0, 7620); // Altitude at 25k feet
 
-    ui->plotSpeed->yAxis->setRange(-128, 128); // 128 meters per second is 250 knots
+    ui->plotSpeed->yAxis->setRange(-275, 275); // 128 meters per second is 250 knots
 
     ui->plotPitch->yAxis->setRange(-90*1.1, 90*1.1);
     ui->plotRoll->yAxis->setRange(-180*1.1, 180*1.1);
-    ui->plotHeading->yAxis->setRange(0, 360*1.1); // raw data is 0-360 but we will show it like this.
 
     // X-Axis range:
     setTimeAxis(ui->plotLatLong->xAxis);
@@ -621,18 +637,31 @@ void GpsGui::preparePlots()
     setPlotTitle(ui->plotSpeed, QString("Speed: X,Y,Z and Ground"));
     setPlotTitle(ui->plotPitch, QString("Pitch"));
     setPlotTitle(ui->plotRoll, QString("Roll"));
-    setPlotTitle(ui->plotHeading, QString("Magnetic Heading"));
+    setPlotTitle(ui->plotHeading, QString("Heading (Mag, Course)"));
 
     // set labels:
 
     // colors:
     ui->plotLatLong->graph(0)->setPen(QPen(Qt::blue));
     ui->plotLatLong->graph(1)->setPen(QPen(Qt::red));
+    ui->plotLatLong->graph(0)->setName("Lat");
+    ui->plotLatLong->graph(1)->setName("Long");
+    ui->plotLatLong->axisRect()->insetLayout()->setInsetAlignment(0, Qt::AlignLeft|Qt::AlignTop);
+    ui->plotLatLong->legend->setBrush(QColor("#85ffffff")); // 85% opaque white
+    ui->plotLatLong->legend->setVisible(true);
 
-    ui->plotSpeed->graph(0)->setPen(QPen(Qt::red));
-    ui->plotSpeed->graph(1)->setPen(QPen(Qt::blue));
-    ui->plotSpeed->graph(2)->setPen(QPen(Qt::yellow));
-    ui->plotSpeed->graph(3)->setPen(QPen(Qt::green));
+
+    ui->plotSpeed->graph(0)->setPen(QPen(Qt::red));    // X
+    ui->plotSpeed->graph(1)->setPen(QPen(Qt::blue));   // Y
+    ui->plotSpeed->graph(2)->setPen(QPen(Qt::darkMagenta)); // Z
+    ui->plotSpeed->graph(3)->setPen(QPen(Qt::green));  // Ground
+    ui->plotSpeed->graph(0)->setName("X");
+    ui->plotSpeed->graph(1)->setName("Y");
+    ui->plotSpeed->graph(2)->setName("Z");
+    ui->plotSpeed->graph(3)->setName("GND");
+    ui->plotSpeed->axisRect()->insetLayout()->setInsetAlignment(0, Qt::AlignLeft|Qt::AlignTop);
+    ui->plotSpeed->legend->setBrush(QColor("#85ffffff")); // 85% opaque white
+    ui->plotSpeed->legend->setVisible(true);
 
     setPlotColors(ui->plotHeading, false);
 
@@ -689,7 +718,9 @@ void GpsGui::updatePlots()
     ui->plotLatLong->graph(1)->setData(timeAxis, longs); // should be longs
 
     ui->plotAltitude->graph()->setData(timeAxis, alts);
-    ui->plotHeading->graph()->setData(timeAxis, headings);
+    ui->plotHeading->graph(0)->setData(timeAxis, headings);
+    ui->plotHeading->graph(1)->setData(timeAxis, courses);
+
     ui->plotPitch->graph()->setData(timeAxis, pitches);
     ui->plotRoll->graph()->setData(timeAxis, rolls);
 

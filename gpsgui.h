@@ -49,6 +49,8 @@ class GpsGui : public QMainWindow
 
     // alt and heading
     QVector<double> headings;
+    QVector<double> courses;
+
     QVector<double> rolls;
     QVector<double> pitches;
 
