@@ -356,6 +356,17 @@ void gpsBinaryReader::processData()
         decodeInvalid = false;
     }
 
+    // DEBUG for AV3 testing:
+    if(m.haveINSAlgorithmStatus)
+    {
+        if(priorAlgorithmStatus1 != m.algorithmStatus1)
+        {
+            //qDebug() << "Changed algorithmStatus bits.";
+            //printAlgorithmStatusMessages(m);
+            priorAlgorithmStatus1 = m.algorithmStatus1;
+        }
+    }
+
     mtx.unlock();
 
 }
@@ -888,6 +899,38 @@ void gpsBinaryReader::printMessage(gpsMessage g)
     this->printMessage();
 }
 
+//bool gpsBinaryReader::getBit(uint32_t data, int bit)
+//{
+//    return (bool)((data<<bit)&0x01);
+//}
+
+void gpsBinaryReader::printAlgorithmStatusMessages(gpsMessage g)
+{
+    if(g.haveINSAlgorithmStatus)
+    {
+        qDebug() << m.counter << ": " << getBit(g.algorithmStatus1, 0)
+                 << getBit(g.algorithmStatus1, 1)
+                 << getBit(g.algorithmStatus1, 2)
+                 << getBit(g.algorithmStatus1, 12)
+                 << getBit(g.algorithmStatus1, 13)
+                 << getBit(g.algorithmStatus1, 14)
+                 << getBit(g.algorithmStatus1, 15);
+
+        //if( (!getBit(g.algorithmStatus1, 13)) || (getBit(g.algorithmStatus1, 15)) )
+//        if( (!getBit(g.algorithmStatus1, 13)) )
+//        {
+//            qDebug() << "Algorithm Status word 1:";
+//            qDebug() << "[ 0] GPS Nav mode: " << getBit(g.algorithmStatus1, 0);
+//            qDebug() << "[ 1] GPS Alignment phase: " << getBit(g.algorithmStatus1, 1);
+//            qDebug() << "[ 2] GPS Fine Alignment: " << getBit(g.algorithmStatus1, 2);
+//            qDebug() << "[12] GPS Received: " << getBit(g.algorithmStatus1, 12);
+//            qDebug() << "[13] GPS Valid: " << getBit(g.algorithmStatus1, 13);
+//            qDebug() << "[14] GPS Waiting: " << getBit(g.algorithmStatus1, 14);
+//            qDebug() << "[15] GPS Rejected: " << getBit(g.algorithmStatus1, 15);
+//        }
+    }
+}
+
 void gpsBinaryReader::printMessage()
 {
     qDebug() << "---------- BEGIN printing GPS message for counter " << m.counter << ": ----------";
@@ -1064,6 +1107,7 @@ void gpsBinaryReader::printMessage()
         printBinary(m.algorithmStatus3);
         qDebug() << "algorithmStatus4: " << m.algorithmStatus4;
         printBinary(m.algorithmStatus4);
+        printAlgorithmStatusMessages(m);
     }
     if(m.haveINSSystemStatus)
     {

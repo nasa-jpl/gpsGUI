@@ -16,7 +16,6 @@ class gpsBinaryFileReader : public QObject
     char *rawData; // memory location for reading in portions of the file
     uint16_t maximumMessageSize;
     uint16_t messageSizeBytes;
-    unsigned int messageDelayMicroSeconds;
     QByteArray binMessage;
     uint64_t messagesRead = 0;
     int headerV5sizeBytes = 27;
@@ -47,12 +46,14 @@ public:
     gpsBinaryFileReader();
     ~gpsBinaryFileReader();
     bool keepGoing = true;
-
+    unsigned int messageDelayMicroSeconds = 0;
+    bool paused = false;
 
 public slots:
     void setFilename(QString filename);
     void beginWork(); // start from beginning of the file
     void stopWork();
+    void setSpeedupFactor(int factor); // 1 = real time
 
 signals:
     void haveGPSMessage(gpsMessage msg);
