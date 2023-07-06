@@ -338,6 +338,7 @@ private:
     QByteArray rawData;
     uint16_t dataPos;
     uint32_t oldCounter = 0;
+    dword priorAlgorithmStatus1 = 0;
     bool firstRun;
     bool decodeInvalid;
     uint32_t messageSum;
@@ -428,7 +429,9 @@ public:
     QString debugString();
     void debugThis();
     void printMessage(gpsMessage g);
+    //bool getBit(dword data, int bit);
     void printMessage();
+    void printAlgorithmStatusMessages(gpsMessage g);
     void printGNSSInfo(int num);
     void printBinary(dword data);
     void printBinary(QByteArray data);

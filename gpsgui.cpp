@@ -7,6 +7,15 @@ GpsGui::GpsGui(QWidget *parent)
 {
     ui->setupUi(this);
 
+#ifndef QT_DEBUG
+    ui->debugBtn->setEnabled(false);
+    ui->debugBtn->setVisible(false);
+#endif
+
+#ifdef __APPLE__
+    ui->gpsBinLogOpenEdit->setText(QDir::homePath());
+#endif
+
     vecSize = 450;
     msgsReceivedCount = 0;
 
@@ -23,6 +32,7 @@ GpsGui::GpsGui(QWidget *parent)
     timeAxis.resize(vecSize);
 
     preparePlots();
+    resetLEDs();
 
     ui->statusConnectionLED->setText("");
     ui->statusConnectionLED->setState(QLedLabel::StateOkBlue);
@@ -38,6 +48,7 @@ GpsGui::GpsGui(QWidget *parent)
 
     ui->statusHeartbeatLED->setText("");
     ui->statusSatelliteRxLED->setText("");
+    ui->statusSatelliteRxLED->setToolTip("Red if too much time between GPS messages.");
 
     firstMessage = true;
 
@@ -78,6 +89,7 @@ GpsGui::GpsGui(QWidget *parent)
     connect(fileReader, SIGNAL(haveGPSMessage(gpsMessage)), this, SLOT(receiveGPSMessage(gpsMessage)));
     connect(this, SIGNAL(startGPSReplay()), fileReader, SLOT(beginWork()));
     connect(this, SIGNAL(stopGPSReplay()), fileReader, SLOT(stopWork()));
+    connect(this, SIGNAL(setGPSReplaySpeedupFactor(int)), fileReader, SLOT(setSpeedupFactor(int)));
     replayThread->start();
 
     ui->gpsPort->setValidator( new QIntValidator(0,65535,this) );
@@ -128,6 +140,7 @@ void GpsGui::receiveGPSMessage(gpsMessage m)
     // https://github.com/marek-cel/QFlightinstruments
 
     float longitude;
+    bool doStickyUpdate = false;
 
     if(m.validDecode)
     {
@@ -135,6 +148,9 @@ void GpsGui::receiveGPSMessage(gpsMessage m)
     } else {
         ui->statusDecodeOkLED->setState(QLedLabel::StateError);
         ui->statusDecodeOkLabel->setText("NG");
+        qDebug() << "ERROR: Invalid message decode.";
+        qDebug() << "Message debug dump:";
+        on_debugBtn_clicked();
         return;
     }
 
@@ -144,30 +160,197 @@ void GpsGui::receiveGPSMessage(gpsMessage m)
     {
         gnssStatusTime.start();
         ui->statusSatelliteRxLED->setState(QLedLabel::StateOk);
-        firstMessage = false;
+        //firstMessage = false; // set at end of function.
     }
 
+    bool doPlotUpdate = ((msgsReceivedCount%40)==0) && ui->drawWidgetsChk->isChecked();
+    bool doWidgetPaint = ((msgsReceivedCount%51)==0) && ui->drawWidgetsChk->isChecked();
+    bool doLabelUpdate = (msgsReceivedCount%10)==0;
+    bool doMapUpdate = ((msgsReceivedCount%50)==0) && ui->drawWidgetsChk->isChecked();
+
+
     gpsMessageHeartbeat.start();
+
+
+    if(m.haveINSAlgorithmStatus)
+    {
+        if( (m.algorithmStatus1 == priorAlgorithmStatus1) && (!firstMessage))
+        {
+            // do nothing
+        } else {
+            if(getBit(m.algorithmStatus1, 0))
+            {
+                ui->navStatus->setState(QLedLabel::StateOk);
+            } else {
+                ui->navStatus->setState(QLedLabel::StateError);
+                navStatusSticky = true;
+            }
+
+            bool alignmentPhase = false;
+            bool fineAlignment = false;
+            if(getBit(m.algorithmStatus1, 1))
+            {
+                // 5 minutes from power
+                ui->gpsAlignment->setText("ALIGNMENT PHASE");
+                ui->gpsAlignment->setToolTip("Do not move.\n Pitch, roll, and compass calibrating.");
+
+                alignmentPhase = true;
+            }
+            if(getBit(m.algorithmStatus1, 2))
+            {
+                ui->gpsAlignment->setText("FINE");
+                fineAlignment = true;
+                ui->gpsAlignment->setToolTip("Movement ok. Some data at lower quality.");
+            }
+            if( (!fineAlignment) && (!alignmentPhase) )
+            {
+                // Course? We don't know what this state really is.
+                // Maybe it means "complete".
+                ui->gpsAlignment->setText("Complete");
+                ui->gpsAlignment->setToolTip("Alignment complete, data ready.");
+            }
+
+            if(getBit(m.algorithmStatus1, 12))
+            {
+                ui->gpsReceivedStatus->setState(QLedLabel::StateOk);
+            } else {
+                ui->gpsReceivedStatus->setState(QLedLabel::StateError);
+                gpsReceivedSticky = true;
+            }
+            if(getBit(m.algorithmStatus1, 13))
+            {
+                ui->gpsValidStatus->setState(QLedLabel::StateOk);
+            } else {
+                ui->gpsValidStatus->setState(QLedLabel::StateError);
+                gpsValidSticky = true;
+            }
+            if(getBit(m.algorithmStatus1, 14))
+            {
+                ui->gpsWaitingStatus->setState(QLedLabel::StateWarning);
+                gpsWaitingSticky = true;
+            } else {
+                ui->gpsWaitingStatus->setState(QLedLabel::StateOk);
+            }
+            if(getBit(m.algorithmStatus1, 15))
+            {
+                ui->gpsRejectedStatus->setState(QLedLabel::StateError);
+                gpsRejectedSticky = true;
+            } else {
+                ui->gpsRejectedStatus->setState(QLedLabel::StateOk);
+            }
+
+            if(getBit(m.algorithmStatus1, 28)) {
+                ui->altitudeSaturationStatus->setState(QLedLabel::StateError);
+                altitudeSaturationSticky = true;
+            } else {
+                ui->altitudeSaturationStatus->setState(QLedLabel::StateOk);
+            }
+
+            if(getBit(m.algorithmStatus1, 29)) {
+                ui->speedSaturationStatus->setState(QLedLabel::StateError);
+                speedSaturationSticky = true;
+            } else {
+                ui->speedSaturationStatus->setState(QLedLabel::StateOk);
+            }
+
+            if(getBit(m.algorithmStatus1, 30)) {
+                ui->interpolationMissedStatus->setState(QLedLabel::StateError);
+                interpolationMissedSticky = true;
+            } else {
+                ui->interpolationMissedStatus->setState(QLedLabel::StateOk);
+            }
+
+            if(getBit(m.algorithmStatus4, 28)) {
+                ui->flashWriteErrorStatus->setState(QLedLabel::StateError);
+                flashWriteErrorSticky = true;
+            } else {
+                ui->flashWriteErrorStatus->setState(QLedLabel::StateOk);
+            }
+
+            if(getBit(m.algorithmStatus4, 29)) {
+                ui->flashEraseErrorStatus->setState(QLedLabel::StateError);
+                flashEraseErrorSticky = true;
+            } else {
+                ui->flashEraseErrorStatus->setState(QLedLabel::StateOk);
+            }
+
+
+            doStickyUpdate = true;
+
+
+            priorAlgorithmStatus1 = m.algorithmStatus1;
+            priorAlgorithmStatus2 = m.algorithmStatus2;
+            priorAlgorithmStatus3 = m.algorithmStatus3;
+            priorAlgorithmStatus4 = m.algorithmStatus4;
+
+        }
+    }
+
+    if(m.haveINSSystemStatus)
+    {
+        if(getBit(m.systemStatus1, 17)) {
+            ui->outputAFullStatus->setState(QLedLabel::StateError);
+            outputAFullSticky = true;
+        } else {
+            ui->outputAFullStatus->setState(QLedLabel::StateOk);
+        }
+
+        if(getBit(m.systemStatus1, 18)) {
+            ui->outputBFullStatus->setState(QLedLabel::StateError);
+            outputBFullSticky = true;
+        } else {
+            ui->outputBFullStatus->setState(QLedLabel::StateOk);
+        }
+
+        if(getBit(m.systemStatus2, 2)) {
+            ui->gpsDetectedSS2Status->setState(QLedLabel::StateOk);
+        } else {
+            ui->gpsDetectedSS2Status->setState(QLedLabel::StateError);
+            gpsDetectedSS2Sticky = true;
+        }
+
+        if(getBit(m.systemStatus3, 18)) {
+            ui->systemReadySS3Status->setState(QLedLabel::StateOk);
+        } else {
+            ui->systemReadySS3Status->setState(QLedLabel::StateError);
+            systemReadySS3Sticky = true;
+        }
+
+        doStickyUpdate = true;
+    }
 
     if(m.haveGNSSInfo1 || m.haveGNSSInfo2 || m.haveGNSSInfo3)
     {
         gnssStatusTime.restart();
+
+        if(m.haveGNSSInfo1)
+        {
+            processGNSSInfo(1);
+        }
+        if(m.haveGNSSInfo2)
+        {
+            processGNSSInfo(2);
+        }
+        if(m.haveGNSSInfo3)
+        {
+            processGNSSInfo(3);
+        }
+
     } else {
         if(gnssStatusTime.elapsed() > 5*1000)
         {
             ui->statusSatelliteRxLED->setState(QLedLabel::StateError);
+            // qDebug() << "gnss Status Time elapsed > 5000, possible dropped messages.";
         } else if (gnssStatusTime.elapsed() > 2*1000)
         {
             // Expected interval is every 1 second.
             ui->statusSatelliteRxLED->setState(QLedLabel::StateWarning);
+            // qDebug() << "gnss Status Time elapsed > 2000, possibly dropped messages.";
         }
     }
 
 
 
-    bool doPlotUpdate = (msgsReceivedCount%40)==0;
-    bool doWidgetPaint = (msgsReceivedCount%10)==0;
-    bool doLabelUpdate = (msgsReceivedCount%10)==0;
 
     if(doLabelUpdate)
     {
@@ -244,9 +427,13 @@ void GpsGui::receiveGPSMessage(gpsMessage m)
             ui->latitudeDataLabel->setText(QString("%1").arg(m.latitude, 0, 'f', 8));
             ui->longitudeDataLabel->setText(QString("%1").arg(longitude, 0, 'f', 8));
             ui->altitudeDataLabel->setText(QString("%1").arg(m.altitude, 0, 'f', 7));
-
-            emit sendMapCoordinates(m.latitude, longitude);
-
+        }
+        if(doMapUpdate)
+        {
+            if(map->isVisible())
+            {
+                emit sendMapCoordinates(m.latitude, longitude);
+            }
         }
         ui->EADI->setAltitude(m.altitude);
 
@@ -277,7 +464,11 @@ void GpsGui::receiveGPSMessage(gpsMessage m)
             ui->groundSpeedDataLabel->setText(QString("%1").arg(m.speedOverGround * 1.94384));
             if(m.speedOverGround > 0.1)
             {
-                emit sendMapRotation(m.courseOverGround);
+                if(doMapUpdate)
+                {
+                    if(map->isVisible())
+                        emit sendMapRotation(m.courseOverGround);
+                }
             }
         }
         if(doPlotUpdate)
@@ -323,6 +514,9 @@ void GpsGui::receiveGPSMessage(gpsMessage m)
 
     if(m.haveUTC)
     {
+        // This message is available every second, unless there is a
+        // skip counter issue occuring, in which case it is skipped.
+
         // Note: This GPS device converts GPST to UTC for us.
         // Otherwise, we would need to account for the differences in the various GNSS satellite systems, which do not all follow GPST or UTC.
 
@@ -330,14 +524,26 @@ void GpsGui::receiveGPSMessage(gpsMessage m)
         uint64_t t = m.UTCdataValidityTime;
         int hour = t / ((float)1E4)/60.0/60.0;
         int minute = ( t / ((float)1E4)/60.0 ) - (hour*60) ;
-        int second = ( t / ((float)1E4) ) - (hour*60.0*60.0) - (minute*60.0);
+        //int second = ( t / ((float)1E4) ) - (hour*60.0*60.0) - (minute*60.0);
+        float secondD = ( t / ((float)1E4) ) - (hour*60.0*60.0) - (minute*60.0);
 
-        QString time = QString("%1:%2:%3 UTC").arg(hour, 2, 10, QChar('0')).arg(minute, 2, 10, QChar('0')).arg(second, 2, 10, QChar('0'));
+        QString time = QString("%1:%2:%3 UTC").arg(hour, 2, 10, QChar('0')).arg(minute, 2, 10, QChar('0')).arg(secondD, 6, 'f', 3, QChar('0'));
 
         ui->utcTimeLabel->setText(time);
         //qDebug() << "UTC time received: " << t << " (100 micro-seconds) hours: " << hour << " minute: " << minute << " second: " << second << " string: " << time;
 
+        uint64_t tN = m.navDataValidityTime;
+        int hourN = tN / ((float)1E4)/60.0/60.0;
+        int minuteN = ( tN / ((float)1E4)/60.0 ) - (hourN*60) ;
+        float secondN = ( tN / ((float)1E4) ) - (hourN*60.0*60.0) - (minuteN*60.0);
+
+        float deltaT = 0.0;
+        deltaT = secondN - secondD; // navValidTime - utcDataValidityTime
+        qDebug() << "Seconds N: " << QString("%1").arg(secondN, 0, 'f', 10) << ", Seconds D: " << secondD << ", DeltaT: " << QString("%1").arg(deltaT, 0, 'f', 10) << "Counter: " << m.counter << "Old Counter: " << oldCounter << "DeltaCounter: " << m.counter-oldCounter;
+        ui->deltaTimeLabel->setText(QString("%1").arg(deltaT, 0, 'f', 10));
+        oldCounter = m.counter;
     }
+
 
     if(doWidgetPaint)
     {
@@ -348,6 +554,14 @@ void GpsGui::receiveGPSMessage(gpsMessage m)
     }
     if(doPlotUpdate)
         updatePlots();
+
+    if(doStickyUpdate)
+        processStickyStatus();
+
+    if(firstMessage)
+    {
+        firstMessage = false;
+    }
 
 }
 
@@ -493,6 +707,132 @@ void GpsGui::updatePlots()
 
 }
 
+unsigned char GpsGui::getBit(uint32_t d, unsigned char bit)
+{
+    //qDebug() << "d: " << d << " bit: " << bit << ", result: " << ((d & ( 1 << bit )) >> bit);
+    return((d & ( 1 << bit )) >> bit);
+}
+
+void GpsGui::processGNSSInfo(int num)
+{
+    gnssInfo *g = &m.gnss[num-1];
+    QString l;
+    switch(g->gnssGPSQuality)
+    {
+        case gpsQualityInvalid:
+            l="Invalid";
+            break;
+        case gpsQualityNatural_10m:
+            l="Natural 10M";
+            break;
+        case gpsQualityDifferential_3m:
+            l="Differential 3M";
+            break;
+        case gpsQualityMilitary_10m:
+            l="Military 10M";
+            break;
+        case gpsQualityRTK_0p1m:
+            l="RTK 0.1M";
+            break;
+        case gpsQualityFloatRTK_0p3m:
+            l="Float RTK 0.3M";
+            break;
+        case gpsQualityOther:
+            l="Other Invalid";
+            break;
+        default:
+            l="Undefined";
+            break;
+    }
+    ui->gpsQualityLabel->setText(l);
+    if(num != 1)
+    {
+        qDebug() << "GNSS Quality for N=" << num << ": " << l;
+        // 1: Internal GNSS
+        // 2: Additional GNSS
+        // 3: "Manual" GNSS
+    }
+}
+
+void GpsGui::processStickyStatus()
+{
+    if(navStatusSticky)
+        ui->navigationSticky->setState(QLedLabel::StateError);
+    else
+        ui->navigationSticky->setState(QLedLabel::StateOk);
+
+    if(gpsReceivedSticky)
+        ui->gpsReceivedSticky->setState(QLedLabel::StateError);
+    else
+        ui->gpsReceivedSticky->setState(QLedLabel::StateOk);
+
+    if(gpsValidSticky)
+        ui->gpsValidSticky->setState(QLedLabel::StateError);
+    else
+        ui->gpsValidSticky->setState(QLedLabel::StateOk);
+
+    if(gpsWaitingSticky)
+        ui->gpsWaitingSticky->setState(QLedLabel::StateError);
+    else
+        ui->gpsWaitingSticky->setState(QLedLabel::StateOk);
+
+    if(gpsRejectedSticky)
+        ui->gpsRejectedSticky->setState(QLedLabel::StateError);
+    else
+        ui->gpsRejectedSticky->setState(QLedLabel::StateOk);
+
+    if(altitudeSaturationSticky)
+        ui->altitudeSaturationSticky->setState(QLedLabel::StateError);
+    else
+        ui->altitudeSaturationSticky->setState(QLedLabel::StateOk);
+
+    if(speedSaturationSticky)
+        ui->speedSaturationSticky->setState(QLedLabel::StateError);
+    else
+        ui->speedSaturationSticky->setState(QLedLabel::StateOk);
+
+    if(interpolationMissedSticky)
+        ui->interpolationMissedSticky->setState(QLedLabel::StateError);
+    else
+        ui->interpolationMissedSticky->setState(QLedLabel::StateOk);
+
+    if(systemReadySS3Sticky)
+        ui->systemReadySS3Sticky->setState(QLedLabel::StateError);
+    else
+        ui->systemReadySS3Sticky->setState(QLedLabel::StateOk);
+
+    if(systemReadySS3Sticky)
+        ui->systemReadySS3Sticky->setState(QLedLabel::StateError);
+    else
+        ui->systemReadySS3Sticky->setState(QLedLabel::StateOk);
+
+    if(gpsDetectedSS2Sticky)
+        ui->gpsDetectedSS2Sticky->setState(QLedLabel::StateError);
+    else
+        ui->gpsDetectedSS2Sticky->setState(QLedLabel::StateOk);
+
+    if(outputAFullSticky)
+        ui->outputAFullSticky->setState(QLedLabel::StateError);
+    else
+        ui->outputAFullSticky->setState(QLedLabel::StateOk);
+
+    if(outputBFullSticky)
+        ui->outputBFullSticky->setState(QLedLabel::StateError);
+    else
+        ui->outputBFullSticky->setState(QLedLabel::StateOk);
+
+    if(flashWriteErrorSticky)
+        ui->flashWriteErrorSticky->setState(QLedLabel::StateError);
+    else
+        ui->flashWriteErrorSticky->setState(QLedLabel::StateOk);
+
+    if(flashEraseErrorSticky)
+        ui->flashEraseErrorSticky->setState(QLedLabel::StateError);
+    else
+        ui->flashEraseErrorSticky->setState(QLedLabel::StateOk);
+
+}
+
 void GpsGui::on_connectBtn_clicked()
 {
     QString binaryLogFilename = ui->gpsBinLogEdit->text();
@@ -556,6 +896,27 @@ void GpsGui::on_clearErrorBtn_clicked()
     ui->statusDecodeOkLED->setState(QLedLabel::StateOk);
     ui->statusSatelliteRxLED->setState(QLedLabel::StateOk);
     ui->statusHeartbeatLED->setState(QLedLabel::StateOk);
+
+    navStatusSticky = false;
+    gpsReceivedSticky = false;
+    gpsValidSticky = false;
+    gpsWaitingSticky = false;
+    gpsRejectedSticky = false;
+    altitudeSaturationSticky = false;
+    speedSaturationSticky = false;
+    interpolationMissedSticky = false;
+
+    systemReadySS3Sticky = false;
+    gpsDetectedSS2Sticky = false;
+    outputAFullSticky = false;
+    outputBFullSticky = false;
+    flashWriteErrorSticky = false;
+    flashEraseErrorSticky = false;
+
+    processStickyStatus();
+
+    firstMessage = true;
+
     gpsMessageHeartbeat.start();
     ui->statusbar->showMessage("NOTE: Resetting error and warning LEDs", 2000);
 }
@@ -563,8 +924,14 @@ void GpsGui::on_clearErrorBtn_clicked()
 void GpsGui::on_selFileBtn_clicked()
 {
     QString filename;
+#ifdef __APPLE__
     filename = QFileDialog::getOpenFileName(this,
-        tr("Open Binary GPS Log"), "/home", tr("Log Files (*.txt *.log *.bin)"));
+                                            tr("Open Binary GPS Log"), QDir::homePath(), tr("Log Files (*)"));
+#else
+    filename = QFileDialog::getOpenFileName(this,
+                                            tr("Open Binary GPS Log"), "/home", tr("Log Files (*)"));
+#endif
+
     if(!filename.isEmpty())
     {
         ui->gpsBinLogOpenEdit->setText(filename);
@@ -572,10 +939,38 @@ void GpsGui::on_selFileBtn_clicked()
     }
 }
 
+void GpsGui::resetLEDs()
+{
+    ui->statusHeartbeatLED->setState(QLedLabel::StateOk);
+    on_clearErrorBtn_clicked();
+    ui->gpsAlignment->setText("Unknown");
+    ui->gpsAlignment->setToolTip("Status not yet received.");
+    ui->navStatus->setState(QLedLabel::StateOkBlue);
+    ui->gpsReceivedStatus->setState(QLedLabel::StateOkBlue);
+    ui->gpsValidStatus->setState(QLedLabel::StateOkBlue);
+    ui->gpsWaitingStatus->setState(QLedLabel::StateOkBlue);
+    ui->gpsRejectedStatus->setState(QLedLabel::StateOkBlue);
+    ui->altitudeSaturationStatus->setState(QLedLabel::StateOkBlue);
+    ui->speedSaturationStatus->setState(QLedLabel::StateOkBlue);
+
+    ui->systemReadySS3Status->setState(QLedLabel::StateOkBlue);
+    ui->gpsDetectedSS2Status->setState(QLedLabel::StateOkBlue);
+    ui->interpolationMissedStatus->setState(QLedLabel::StateOkBlue);
+    ui->outputAFullStatus->setState(QLedLabel::StateOkBlue);
+    ui->outputBFullStatus->setState(QLedLabel::StateOkBlue);
+    ui->flashEraseErrorStatus->setState(QLedLabel::StateOkBlue);
+    ui->flashWriteErrorStatus->setState(QLedLabel::StateOkBlue);
+
+    ui->gpsQualityLabel->setText("UNKNOWN");
+}
+
 void GpsGui::on_replayGPSBtn_clicked()
 {
     //emit setBinaryLogReplayFilename(ui->gpsBinLogOpenEdit->text());
-    ui->statusHeartbeatLED->setState(QLedLabel::StateOk);
+    resetLEDs();
+    firstMessage = true;
+
+    qDebug() << "Starting replay of file:" << ui->gpsBinLogOpenEdit->text();
     emit startGPSReplay();
 }
 
@@ -590,6 +985,7 @@ void GpsGui::on_gpsBinLogOpenEdit_editingFinished()
 void GpsGui::on_stopReplayBtn_clicked()
 {
     fileReader->keepGoing = false;
+    qDebug() << "Stopping log replay.";
     emit stopGPSReplay();
 }
 
@@ -609,4 +1005,23 @@ void GpsGui::on_startSecondLogBtn_clicked()
 void GpsGui::on_stopSecondLogBtn_clicked()
 {
     emit stopSecondaryLog();
+}
+
+void GpsGui::on_speedupFactorSpin_valueChanged(int arg1)
+{
+    if(arg1 > 0)
+    {
+        fileReader->messageDelayMicroSeconds = (1E6 / 200.0) / arg1;
+        emit setGPSReplaySpeedupFactor(arg1);
+    }
+}
+
+void GpsGui::on_replayEnabledChk_toggled(bool checked)
+{
+    fileReader->paused = !checked;
+}
+
+void GpsGui::on_replayEnabledMainChk_toggled(bool checked)
+{
+    fileReader->paused = !checked;
 }

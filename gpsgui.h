@@ -8,7 +8,12 @@
 #include <QIntValidator>
 #include <QElapsedTimer>
 
+
+#ifdef __APPLE__
+#include "qcustomplot-source/qcustomplot.h"
+#else
 #include <qcustomplot.h>
+#endif
 
 #include "gpsnetwork.h"
 #include "gpsbinaryreader.h"
@@ -91,6 +96,7 @@ signals:
     void setBinaryLogReplayFilename(QString replayFilename);
     void startGPSReplay();
     void stopGPSReplay();
+    void setGPSReplaySpeedupFactor(int factor);
     void sendMapCoordinates(double lat, double lng);
     void sendMapRotation(float angle);
     void startSecondaryLog(QString secondaryLogFilename);
@@ -126,7 +132,44 @@ private slots:
 
     void on_stopSecondLogBtn_clicked();
 
+    void on_speedupFactorSpin_valueChanged(int arg1);
+
+    void on_replayEnabledChk_toggled(bool checked);
+
+    void on_replayEnabledMainChk_toggled(bool checked);
+
 private:
     Ui::GpsGui *ui;
+    dword priorAlgorithmStatus1 = 0;
+    dword priorAlgorithmStatus2 = 0;
+    dword priorAlgorithmStatus3 = 0;
+    dword priorAlgorithmStatus4 = 0;
+    dword oldCounter = 0;
+
+    uint64_t droppedTotal = 0;
+
+    void processGNSSInfo(int num);
+
+    unsigned char getBit(uint32_t d, unsigned char bit);
+    void processStickyStatus();
+    void resetLEDs();
+    bool navStatusSticky = false;
+    bool gpsReceivedSticky = false;
+    bool gpsValidSticky = false;
+    bool gpsWaitingSticky = false;
+    bool gpsRejectedSticky = false;
+
+    bool altitudeSaturationSticky = false;
+    bool speedSaturationSticky = false;
+    bool interpolationMissedSticky = false;
+
+    bool systemReadySS3Sticky = false;
+    bool gpsDetectedSS2Sticky = false;
+    bool outputAFullSticky = false;
+    bool outputBFullSticky = false;
+    bool flashWriteErrorSticky = false;
+    bool flashEraseErrorSticky = false;
+
+
 };
 #endif // GPSGUI_H

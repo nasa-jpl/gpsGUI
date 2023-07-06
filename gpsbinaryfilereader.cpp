@@ -6,6 +6,7 @@ gpsBinaryFileReader::gpsBinaryFileReader()
     readFirstLine = false;
     fileOpen = false;
     maximumMessageSize = 512; // 391 is max seen
+    // This is how fast the file plays back:
     messageDelayMicroSeconds = 1E6 / 200.0;
     rawData = (char*)malloc(maximumMessageSize); // bytes to hold a message read
 }
@@ -15,6 +16,15 @@ gpsBinaryFileReader::~gpsBinaryFileReader()
     // close file
     closeFile();
     free(rawData);
+}
+
+void gpsBinaryFileReader::setSpeedupFactor(int factor)
+{
+    if(factor >0)
+    {
+        qDebug() << "Setting replay factor to: " << factor;
+        messageDelayMicroSeconds = (1E6 / 200.0) / factor;
+    }
 }
 
 void gpsBinaryFileReader::beginWork()
@@ -84,6 +94,10 @@ void gpsBinaryFileReader::startProcessFile()
         // using the change in microseconds between messages.
         // First file sets the offset, then we count and wait between.
         usleep(messageDelayMicroSeconds);
+        while(paused)
+        {
+            usleep(10000);
+        }
     }
 
 

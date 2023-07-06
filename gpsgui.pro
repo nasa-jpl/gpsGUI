@@ -6,6 +6,8 @@ QT += quickwidgets
 
 CONFIG += c++11
 
+macx:CONFIG+=sdk_no_version_check
+
 # The following define makes your compiler emit warnings if you use
 # any Qt feature that has been marked deprecated (the exact warnings
 # depend on your compiler). Please consult the documentation of the
@@ -31,6 +33,8 @@ SOURCES += \
     mapview.cpp \
     qledlabel.cpp
 
+macx:SOURCES += qcustomplot-source/qcustomplot.cpp
+
 HEADERS += \
     gpsbinaryfilereader.h \
     gpsbinarylogger.h \
@@ -40,15 +44,17 @@ HEADERS += \
     mapview.h \
     qledlabel.h
 
+macx:HEADERS += qcustomplot-source/qcustomplot.h
+
 FORMS += \
     gpsgui.ui \
     mapview.ui
 
 include(qfi/qfi.pri)
 
-#!linux:SOURCES += ../qcustomplot/qcustomplot.cpp
-#!linux:HEADERS += ../qcustomplot/qcustomplot.h
-#!linux:INCLUDEPATH += ../qcustomplot
+#!linux:SOURCES += qcustomplot-source/qcustomplot.cpp
+#!linux:HEADERS += qcustomplot-source/qcustomplot.h
+!linux:INCLUDEPATH += qcustomplot-source
 
 # Default rules for deployment.
 qnx: target.path = /tmp/$${TARGET}/bin
