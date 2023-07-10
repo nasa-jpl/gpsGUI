@@ -20,12 +20,24 @@ public:
         StateUnknown
     };
 
+    void setSizeCustom(int fontSize);
+
+private:
+    int SIZE = 16;
+    QFont f;
+    QString greenSS;
+    QString blueSS;
+    QString orangeSS;
+    QString redSS;
+    State lastState = StateOkBlue;
+    void setupSS(int dotSize);
 
 signals:
 
 public slots:
     void setState(State state);
     void setState(bool state);
+
 };
 
 #endif // QLEDLABEL_H
