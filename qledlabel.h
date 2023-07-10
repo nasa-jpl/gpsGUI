@@ -17,7 +17,8 @@ public:
         StateOkBlue,
         StateWarning,
         StateError,
-        StateUnknown
+        StateUnknown,
+        StateInitial
     };
 
     void setSizeCustom(int fontSize);

@@ -14,7 +14,7 @@ QLedLabel::QLedLabel(QWidget* parent) :
     this->f = this->font();
     this->setText("");
     setupSS(SIZE);
-    lastState = QLedLabel::StateUnknown;
+    lastState = QLedLabel::StateInitial;
     setState(StateOkBlue);
     setFixedSize(SIZE, SIZE);
     this->setAlignment(Qt::AlignCenter);
