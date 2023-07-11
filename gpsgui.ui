@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>934</width>
-    <height>1166</height>
+    <width>945</width>
+    <height>1286</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -562,238 +562,15 @@
           <property name="bottomMargin">
            <number>10</number>
           </property>
-          <item row="2" column="0">
-           <widget class="QLabel" name="label_22">
-            <property name="font">
-             <font>
-              <pointsize>16</pointsize>
-             </font>
-            </property>
+          <item row="7" column="5">
+           <widget class="QLedLabel" name="flashEraseErrorStatus">
             <property name="text">
-             <string>Navigation:</string>
-            </property>
-           </widget>
-          </item>
-          <item row="5" column="4">
-           <widget class="QLabel" name="label_46">
-            <property name="font">
-             <font>
-              <pointsize>16</pointsize>
-             </font>
-            </property>
-            <property name="text">
-             <string>OUTPUT B Full</string>
-            </property>
-           </widget>
-          </item>
-          <item row="1" column="1">
-           <widget class="QLabel" name="gpsAlignment">
-            <property name="font">
-             <font>
-              <pointsize>16</pointsize>
-             </font>
-            </property>
-            <property name="text">
-             <string>Unknown</string>
+             <string/>
             </property>
            </widget>
           </item>
           <item row="5" column="5">
            <widget class="QLedLabel" name="outputBFullStatus">
-            <property name="font">
-             <font>
-              <pointsize>16</pointsize>
-             </font>
-            </property>
-            <property name="text">
-             <string/>
-            </property>
-           </widget>
-          </item>
-          <item row="5" column="6">
-           <widget class="QLedLabel" name="outputBFullSticky">
-            <property name="font">
-             <font>
-              <pointsize>16</pointsize>
-             </font>
-            </property>
-            <property name="text">
-             <string/>
-            </property>
-           </widget>
-          </item>
-          <item row="7" column="4">
-           <widget class="QLabel" name="label_34">
-            <property name="font">
-             <font>
-              <pointsize>16</pointsize>
-             </font>
-            </property>
-            <property name="text">
-             <string>Flash Erase Error</string>
-            </property>
-           </widget>
-          </item>
-          <item row="1" column="4">
-           <widget class="QLabel" name="label_31">
-            <property name="font">
-             <font>
-              <pointsize>16</pointsize>
-             </font>
-            </property>
-            <property name="text">
-             <string>System Ready SS3</string>
-            </property>
-           </widget>
-          </item>
-          <item row="4" column="4">
-           <widget class="QLabel" name="label_43">
-            <property name="font">
-             <font>
-              <pointsize>16</pointsize>
-             </font>
-            </property>
-            <property name="text">
-             <string>OUTPUT A Full</string>
-            </property>
-           </widget>
-          </item>
-          <item row="0" column="0">
-           <widget class="QLabel" name="label_38">
-            <property name="font">
-             <font>
-              <pointsize>16</pointsize>
-             </font>
-            </property>
-            <property name="text">
-             <string>Status Bit: </string>
-            </property>
-           </widget>
-          </item>
-          <item row="0" column="3">
-           <widget class="QLabel" name="label_29">
-            <property name="text">
-             <string/>
-            </property>
-           </widget>
-          </item>
-          <item row="2" column="4">
-           <widget class="QLabel" name="label_37">
-            <property name="font">
-             <font>
-              <pointsize>16</pointsize>
-             </font>
-            </property>
-            <property name="text">
-             <string>GPS Detected SS2</string>
-            </property>
-           </widget>
-          </item>
-          <item row="3" column="1">
-           <widget class="QLedLabel" name="gpsReceivedStatus">
-            <property name="font">
-             <font>
-              <pointsize>16</pointsize>
-             </font>
-            </property>
-            <property name="text">
-             <string/>
-            </property>
-           </widget>
-          </item>
-          <item row="1" column="2">
-           <widget class="QLedLabel" name="gpsAlignmentSticky">
-            <property name="font">
-             <font>
-              <pointsize>16</pointsize>
-             </font>
-            </property>
-            <property name="text">
-             <string/>
-            </property>
-           </widget>
-          </item>
-          <item row="5" column="0">
-           <widget class="QLabel" name="label_27">
-            <property name="font">
-             <font>
-              <pointsize>16</pointsize>
-             </font>
-            </property>
-            <property name="text">
-             <string>GPS Waiting:</string>
-            </property>
-           </widget>
-          </item>
-          <item row="6" column="2">
-           <widget class="QLedLabel" name="gpsRejectedSticky">
-            <property name="font">
-             <font>
-              <pointsize>16</pointsize>
-             </font>
-            </property>
-            <property name="text">
-             <string/>
-            </property>
-           </widget>
-          </item>
-          <item row="6" column="4">
-           <widget class="QLabel" name="label_33">
-            <property name="font">
-             <font>
-              <pointsize>16</pointsize>
-             </font>
-            </property>
-            <property name="text">
-             <string>Flash Write Error</string>
-            </property>
-           </widget>
-          </item>
-          <item row="1" column="5">
-           <widget class="QLedLabel" name="systemReadySS3Status">
-            <property name="font">
-             <font>
-              <pointsize>16</pointsize>
-             </font>
-            </property>
-            <property name="text">
-             <string/>
-            </property>
-           </widget>
-          </item>
-          <item row="0" column="2">
-           <widget class="QLabel" name="label_40">
-            <property name="font">
-             <font>
-              <pointsize>16</pointsize>
-             </font>
-            </property>
-            <property name="text">
-             <string>Sticky Error Display:</string>
-            </property>
-           </widget>
-          </item>
-          <item row="2" column="5">
-           <widget class="QLedLabel" name="gpsDetectedSS2Status">
-            <property name="font">
-             <font>
-              <pointsize>16</pointsize>
-             </font>
-            </property>
-            <property name="text">
-             <string/>
-            </property>
-           </widget>
-          </item>
-          <item row="6" column="5">
-           <widget class="QLedLabel" name="flashWriteErrorStatus">
-            <property name="text">
-             <string/>
-            </property>
-           </widget>
-          </item>
-          <item row="4" column="6">
-           <widget class="QLedLabel" name="outputAFullSticky">
             <property name="font">
              <font>
               <pointsize>16</pointsize>
@@ -816,37 +593,6 @@
             </property>
            </widget>
           </item>
-          <item row="0" column="4">
-           <widget class="QLabel" name="label_23">
-            <property name="font">
-             <font>
-              <pointsize>16</pointsize>
-             </font>
-            </property>
-            <property name="text">
-             <string>Status Bit:</string>
-            </property>
-           </widget>
-          </item>
-          <item row="7" column="0">
-           <widget class="QLabel" name="label_35">
-            <property name="font">
-             <font>
-              <pointsize>16</pointsize>
-             </font>
-            </property>
-            <property name="text">
-             <string>Altitude Saturation</string>
-            </property>
-           </widget>
-          </item>
-          <item row="7" column="6">
-           <widget class="QLedLabel" name="flashEraseErrorSticky">
-            <property name="text">
-             <string/>
-            </property>
-           </widget>
-          </item>
           <item row="4" column="5">
            <widget class="QLedLabel" name="outputAFullStatus">
             <property name="font">
@@ -859,27 +605,34 @@
             </property>
            </widget>
           </item>
-          <item row="0" column="1">
-           <widget class="QLabel" name="label_39">
-            <property name="font">
-             <font>
-              <pointsize>16</pointsize>
-             </font>
-            </property>
+          <item row="7" column="6">
+           <widget class="QLedLabel" name="flashEraseErrorSticky">
             <property name="text">
-             <string>Current Status: </string>
+             <string/>
             </property>
            </widget>
           </item>
-          <item row="3" column="2">
-           <widget class="QLedLabel" name="gpsReceivedSticky">
+          <item row="0" column="2">
+           <widget class="QLabel" name="label_40">
             <property name="font">
              <font>
               <pointsize>16</pointsize>
              </font>
             </property>
             <property name="text">
-             <string/>
+             <string>Sticky Error Display:</string>
+            </property>
+           </widget>
+          </item>
+          <item row="0" column="0">
+           <widget class="QLabel" name="label_38">
+            <property name="font">
+             <font>
+              <pointsize>16</pointsize>
+             </font>
+            </property>
+            <property name="text">
+             <string>Status Bit: </string>
             </property>
            </widget>
           </item>
@@ -895,32 +648,8 @@
             </property>
            </widget>
           </item>
-          <item row="0" column="5">
-           <widget class="QLabel" name="label_30">
-            <property name="font">
-             <font>
-              <pointsize>16</pointsize>
-             </font>
-            </property>
-            <property name="text">
-             <string>Current Status</string>
-            </property>
-           </widget>
-          </item>
-          <item row="4" column="0">
-           <widget class="QLabel" name="label_26">
-            <property name="font">
-             <font>
-              <pointsize>16</pointsize>
-             </font>
-            </property>
-            <property name="text">
-             <string>GPS Valid:</string>
-            </property>
-           </widget>
-          </item>
-          <item row="2" column="1">
-           <widget class="QLedLabel" name="navStatus">
+          <item row="6" column="1">
+           <widget class="QLedLabel" name="gpsRejectedStatus">
             <property name="font">
              <font>
               <pointsize>16</pointsize>
@@ -931,8 +660,8 @@
             </property>
            </widget>
           </item>
-          <item row="4" column="1">
-           <widget class="QLedLabel" name="gpsValidStatus">
+          <item row="1" column="5">
+           <widget class="QLedLabel" name="systemReadySS3Status">
             <property name="font">
              <font>
               <pointsize>16</pointsize>
@@ -943,46 +672,15 @@
             </property>
            </widget>
           </item>
-          <item row="7" column="5">
-           <widget class="QLedLabel" name="flashEraseErrorStatus">
-            <property name="text">
-             <string/>
-            </property>
-           </widget>
-          </item>
-          <item row="5" column="2">
-           <widget class="QLedLabel" name="gpsWaitingSticky">
+          <item row="11" column="0">
+           <widget class="QLabel" name="label_48">
             <property name="font">
              <font>
               <pointsize>16</pointsize>
              </font>
             </property>
             <property name="text">
-             <string/>
-            </property>
-           </widget>
-          </item>
-          <item row="0" column="6">
-           <widget class="QLabel" name="label_25">
-            <property name="font">
-             <font>
-              <pointsize>16</pointsize>
-             </font>
-            </property>
-            <property name="text">
-             <string>Sticky Error Display:</string>
-            </property>
-           </widget>
-          </item>
-          <item row="2" column="6">
-           <widget class="QLedLabel" name="gpsDetectedSS2Sticky">
-            <property name="font">
-             <font>
-              <pointsize>16</pointsize>
-             </font>
-            </property>
-            <property name="text">
-             <string/>
+             <string>ZUpT Rotation Mode</string>
             </property>
            </widget>
           </item>
@@ -998,8 +696,116 @@
             </property>
            </widget>
           </item>
-          <item row="4" column="2">
-           <widget class="QLedLabel" name="gpsValidSticky">
+          <item row="8" column="5">
+           <widget class="QLabel" name="gpsQualityLabel">
+            <property name="font">
+             <font>
+              <pointsize>16</pointsize>
+             </font>
+            </property>
+            <property name="text">
+             <string>UNKNOWN</string>
+            </property>
+           </widget>
+          </item>
+          <item row="10" column="1">
+           <widget class="QLedLabel" name="zuptValidStatus">
+            <property name="text">
+             <string/>
+            </property>
+           </widget>
+          </item>
+          <item row="9" column="6">
+           <widget class="QLedLabel" name="altitudeRejectedSticky">
+            <property name="text">
+             <string/>
+            </property>
+           </widget>
+          </item>
+          <item row="8" column="4">
+           <widget class="QLabel" name="label_42">
+            <property name="font">
+             <font>
+              <pointsize>16</pointsize>
+             </font>
+            </property>
+            <property name="text">
+             <string>GPS Quality:</string>
+            </property>
+           </widget>
+          </item>
+          <item row="4" column="4">
+           <widget class="QLabel" name="label_43">
+            <property name="font">
+             <font>
+              <pointsize>16</pointsize>
+             </font>
+            </property>
+            <property name="text">
+             <string>OUTPUT A Full</string>
+            </property>
+           </widget>
+          </item>
+          <item row="10" column="0">
+           <widget class="QLabel" name="label_45">
+            <property name="font">
+             <font>
+              <pointsize>16</pointsize>
+             </font>
+            </property>
+            <property name="toolTip">
+             <string>From Algorithm Status 2 Bit 17</string>
+            </property>
+            <property name="text">
+             <string>ZUpT Valid</string>
+            </property>
+           </widget>
+          </item>
+          <item row="3" column="5">
+           <widget class="QLedLabel" name="interpolationMissedStatus">
+            <property name="text">
+             <string/>
+            </property>
+           </widget>
+          </item>
+          <item row="1" column="4">
+           <widget class="QLabel" name="label_31">
+            <property name="font">
+             <font>
+              <pointsize>16</pointsize>
+             </font>
+            </property>
+            <property name="text">
+             <string>System Ready SS3</string>
+            </property>
+           </widget>
+          </item>
+          <item row="3" column="4">
+           <widget class="QLabel" name="label_41">
+            <property name="font">
+             <font>
+              <pointsize>16</pointsize>
+             </font>
+            </property>
+            <property name="text">
+             <string>Interpolation Missed</string>
+            </property>
+           </widget>
+          </item>
+          <item row="5" column="0">
+           <widget class="QLabel" name="label_27">
+            <property name="font">
+             <font>
+              <pointsize>16</pointsize>
+             </font>
+            </property>
+            <property name="text">
+             <string>GPS Waiting:</string>
+            </property>
+           </widget>
+          </item>
+          <item row="2" column="1">
+           <widget class="QLedLabel" name="navStatus">
             <property name="font">
              <font>
               <pointsize>16</pointsize>
@@ -1010,20 +816,15 @@
             </property>
            </widget>
           </item>
-          <item row="6" column="1">
-           <widget class="QLedLabel" name="gpsRejectedStatus">
-            <property name="font">
-             <font>
-              <pointsize>16</pointsize>
-             </font>
-            </property>
+          <item row="3" column="6">
+           <widget class="QLedLabel" name="interpolationMissedSticky">
             <property name="text">
              <string/>
             </property>
            </widget>
           </item>
-          <item row="1" column="6">
-           <widget class="QLedLabel" name="systemReadySS3Sticky">
+          <item row="1" column="2">
+           <widget class="QLedLabel" name="gpsAlignmentSticky">
             <property name="font">
              <font>
               <pointsize>16</pointsize>
@@ -1046,8 +847,393 @@
             </property>
            </widget>
           </item>
+          <item row="7" column="4">
+           <widget class="QLabel" name="label_34">
+            <property name="font">
+             <font>
+              <pointsize>16</pointsize>
+             </font>
+            </property>
+            <property name="text">
+             <string>Flash Erase Error</string>
+            </property>
+           </widget>
+          </item>
+          <item row="10" column="2">
+           <widget class="QLedLabel" name="zuptValidSticky">
+            <property name="text">
+             <string/>
+            </property>
+           </widget>
+          </item>
+          <item row="2" column="4">
+           <widget class="QLabel" name="label_37">
+            <property name="font">
+             <font>
+              <pointsize>16</pointsize>
+             </font>
+            </property>
+            <property name="text">
+             <string>GPS Detected SS2</string>
+            </property>
+           </widget>
+          </item>
           <item row="6" column="6">
            <widget class="QLedLabel" name="flashWriteErrorSticky">
+            <property name="text">
+             <string/>
+            </property>
+           </widget>
+          </item>
+          <item row="9" column="1">
+           <widget class="QLedLabel" name="zuptActivatedStatus">
+            <property name="text">
+             <string/>
+            </property>
+           </widget>
+          </item>
+          <item row="5" column="6">
+           <widget class="QLedLabel" name="outputBFullSticky">
+            <property name="font">
+             <font>
+              <pointsize>16</pointsize>
+             </font>
+            </property>
+            <property name="text">
+             <string/>
+            </property>
+           </widget>
+          </item>
+          <item row="1" column="1">
+           <widget class="QLabel" name="gpsAlignment">
+            <property name="font">
+             <font>
+              <pointsize>16</pointsize>
+             </font>
+            </property>
+            <property name="text">
+             <string>Unknown</string>
+            </property>
+           </widget>
+          </item>
+          <item row="2" column="5">
+           <widget class="QLedLabel" name="gpsDetectedSS2Status">
+            <property name="font">
+             <font>
+              <pointsize>16</pointsize>
+             </font>
+            </property>
+            <property name="text">
+             <string/>
+            </property>
+           </widget>
+          </item>
+          <item row="0" column="4">
+           <widget class="QLabel" name="label_23">
+            <property name="font">
+             <font>
+              <pointsize>16</pointsize>
+             </font>
+            </property>
+            <property name="text">
+             <string>Status Bit:</string>
+            </property>
+           </widget>
+          </item>
+          <item row="4" column="0">
+           <widget class="QLabel" name="label_26">
+            <property name="font">
+             <font>
+              <pointsize>16</pointsize>
+             </font>
+            </property>
+            <property name="text">
+             <string>GPS Valid:</string>
+            </property>
+           </widget>
+          </item>
+          <item row="1" column="6">
+           <widget class="QLedLabel" name="systemReadySS3Sticky">
+            <property name="font">
+             <font>
+              <pointsize>16</pointsize>
+             </font>
+            </property>
+            <property name="text">
+             <string/>
+            </property>
+           </widget>
+          </item>
+          <item row="5" column="4">
+           <widget class="QLabel" name="label_46">
+            <property name="font">
+             <font>
+              <pointsize>16</pointsize>
+             </font>
+            </property>
+            <property name="text">
+             <string>OUTPUT B Full</string>
+            </property>
+           </widget>
+          </item>
+          <item row="9" column="4">
+           <widget class="QLabel" name="label_47">
+            <property name="font">
+             <font>
+              <pointsize>16</pointsize>
+             </font>
+            </property>
+            <property name="text">
+             <string>Altitude Rejected AS2b15</string>
+            </property>
+           </widget>
+          </item>
+          <item row="0" column="1">
+           <widget class="QLabel" name="label_39">
+            <property name="font">
+             <font>
+              <pointsize>16</pointsize>
+             </font>
+            </property>
+            <property name="text">
+             <string>Current Status: </string>
+            </property>
+           </widget>
+          </item>
+          <item row="0" column="3">
+           <widget class="QLabel" name="label_29">
+            <property name="text">
+             <string/>
+            </property>
+           </widget>
+          </item>
+          <item row="4" column="2">
+           <widget class="QLedLabel" name="gpsValidSticky">
+            <property name="font">
+             <font>
+              <pointsize>16</pointsize>
+             </font>
+            </property>
+            <property name="text">
+             <string/>
+            </property>
+           </widget>
+          </item>
+          <item row="6" column="4">
+           <widget class="QLabel" name="label_33">
+            <property name="font">
+             <font>
+              <pointsize>16</pointsize>
+             </font>
+            </property>
+            <property name="text">
+             <string>Flash Write Error</string>
+            </property>
+           </widget>
+          </item>
+          <item row="5" column="2">
+           <widget class="QLedLabel" name="gpsWaitingSticky">
+            <property name="font">
+             <font>
+              <pointsize>16</pointsize>
+             </font>
+            </property>
+            <property name="text">
+             <string/>
+            </property>
+           </widget>
+          </item>
+          <item row="6" column="5">
+           <widget class="QLedLabel" name="flashWriteErrorStatus">
+            <property name="text">
+             <string/>
+            </property>
+           </widget>
+          </item>
+          <item row="9" column="5">
+           <widget class="QLedLabel" name="altitudeRejectedStatus">
+            <property name="text">
+             <string/>
+            </property>
+           </widget>
+          </item>
+          <item row="2" column="0">
+           <widget class="QLabel" name="label_22">
+            <property name="font">
+             <font>
+              <pointsize>16</pointsize>
+             </font>
+            </property>
+            <property name="text">
+             <string>Navigation:</string>
+            </property>
+           </widget>
+          </item>
+          <item row="7" column="0">
+           <widget class="QLabel" name="label_35">
+            <property name="font">
+             <font>
+              <pointsize>16</pointsize>
+             </font>
+            </property>
+            <property name="text">
+             <string>Altitude Saturation</string>
+            </property>
+           </widget>
+          </item>
+          <item row="0" column="6">
+           <widget class="QLabel" name="label_25">
+            <property name="font">
+             <font>
+              <pointsize>16</pointsize>
+             </font>
+            </property>
+            <property name="text">
+             <string>Sticky Error Display:</string>
+            </property>
+           </widget>
+          </item>
+          <item row="8" column="0">
+           <widget class="QLabel" name="label_36">
+            <property name="font">
+             <font>
+              <pointsize>16</pointsize>
+             </font>
+            </property>
+            <property name="text">
+             <string>Speed Saturation</string>
+            </property>
+           </widget>
+          </item>
+          <item row="6" column="2">
+           <widget class="QLedLabel" name="gpsRejectedSticky">
+            <property name="font">
+             <font>
+              <pointsize>16</pointsize>
+             </font>
+            </property>
+            <property name="text">
+             <string/>
+            </property>
+           </widget>
+          </item>
+          <item row="4" column="1">
+           <widget class="QLedLabel" name="gpsValidStatus">
+            <property name="font">
+             <font>
+              <pointsize>16</pointsize>
+             </font>
+            </property>
+            <property name="text">
+             <string/>
+            </property>
+           </widget>
+          </item>
+          <item row="3" column="2">
+           <widget class="QLedLabel" name="gpsReceivedSticky">
+            <property name="font">
+             <font>
+              <pointsize>16</pointsize>
+             </font>
+            </property>
+            <property name="text">
+             <string/>
+            </property>
+           </widget>
+          </item>
+          <item row="9" column="2">
+           <widget class="QLedLabel" name="zuptActivatedSticky">
+            <property name="text">
+             <string/>
+            </property>
+           </widget>
+          </item>
+          <item row="2" column="6">
+           <widget class="QLedLabel" name="gpsDetectedSS2Sticky">
+            <property name="font">
+             <font>
+              <pointsize>16</pointsize>
+             </font>
+            </property>
+            <property name="text">
+             <string/>
+            </property>
+           </widget>
+          </item>
+          <item row="7" column="2">
+           <widget class="QLedLabel" name="altitudeSaturationSticky">
+            <property name="text">
+             <string/>
+            </property>
+           </widget>
+          </item>
+          <item row="0" column="5">
+           <widget class="QLabel" name="label_30">
+            <property name="font">
+             <font>
+              <pointsize>16</pointsize>
+             </font>
+            </property>
+            <property name="text">
+             <string>Current Status</string>
+            </property>
+           </widget>
+          </item>
+          <item row="7" column="1">
+           <widget class="QLedLabel" name="altitudeSaturationStatus">
+            <property name="text">
+             <string/>
+            </property>
+           </widget>
+          </item>
+          <item row="4" column="6">
+           <widget class="QLedLabel" name="outputAFullSticky">
+            <property name="font">
+             <font>
+              <pointsize>16</pointsize>
+             </font>
+            </property>
+            <property name="text">
+             <string/>
+            </property>
+           </widget>
+          </item>
+          <item row="8" column="2">
+           <widget class="QLedLabel" name="speedSaturationSticky">
+            <property name="text">
+             <string/>
+            </property>
+           </widget>
+          </item>
+          <item row="8" column="1">
+           <widget class="QLedLabel" name="speedSaturationStatus">
+            <property name="text">
+             <string/>
+            </property>
+           </widget>
+          </item>
+          <item row="9" column="0">
+           <widget class="QLabel" name="label_44">
+            <property name="font">
+             <font>
+              <pointsize>16</pointsize>
+             </font>
+            </property>
+            <property name="toolTip">
+             <string>From Algorithm Status 2 Bit 16</string>
+            </property>
+            <property name="text">
+             <string>ZUpT Activated</string>
+            </property>
+           </widget>
+          </item>
+          <item row="3" column="1">
+           <widget class="QLedLabel" name="gpsReceivedStatus">
+            <property name="font">
+             <font>
+              <pointsize>16</pointsize>
+             </font>
+            </property>
             <property name="text">
              <string/>
             </property>
@@ -1065,93 +1251,43 @@
             </property>
            </widget>
           </item>
-          <item row="8" column="0">
-           <widget class="QLabel" name="label_36">
+          <item row="12" column="0">
+           <widget class="QLabel" name="label_49">
             <property name="font">
              <font>
               <pointsize>16</pointsize>
              </font>
             </property>
             <property name="text">
-             <string>Speed Saturation</string>
+             <string>ZUpT Rotation Valid</string>
             </property>
            </widget>
           </item>
-          <item row="7" column="1">
-           <widget class="QLedLabel" name="altitudeSaturationStatus">
+          <item row="11" column="1">
+           <widget class="QLedLabel" name="zuptRotationModeStatus">
             <property name="text">
              <string/>
             </property>
            </widget>
           </item>
-          <item row="7" column="2">
-           <widget class="QLedLabel" name="altitudeSaturationSticky">
+          <item row="11" column="2">
+           <widget class="QLedLabel" name="zuptRotationModeSticky">
             <property name="text">
              <string/>
             </property>
            </widget>
           </item>
-          <item row="8" column="1">
-           <widget class="QLedLabel" name="speedSaturationStatus">
+          <item row="12" column="1">
+           <widget class="QLedLabel" name="zuptRotationValidStatus">
             <property name="text">
              <string/>
             </property>
            </widget>
           </item>
-          <item row="8" column="2">
-           <widget class="QLedLabel" name="speedSaturationSticky">
+          <item row="12" column="2">
+           <widget class="QLedLabel" name="zuptRotationValidSticky">
             <property name="text">
              <string/>
-            </property>
-           </widget>
-          </item>
-          <item row="3" column="4">
-           <widget class="QLabel" name="label_41">
-            <property name="font">
-             <font>
-              <pointsize>16</pointsize>
-             </font>
-            </property>
-            <property name="text">
-             <string>Interpolation Missed</string>
-            </property>
-           </widget>
-          </item>
-          <item row="3" column="5">
-           <widget class="QLedLabel" name="interpolationMissedStatus">
-            <property name="text">
-             <string/>
-            </property>
-           </widget>
-          </item>
-          <item row="3" column="6">
-           <widget class="QLedLabel" name="interpolationMissedSticky">
-            <property name="text">
-             <string/>
-            </property>
-           </widget>
-          </item>
-          <item row="8" column="4">
-           <widget class="QLabel" name="label_42">
-            <property name="font">
-             <font>
-              <pointsize>16</pointsize>
-             </font>
-            </property>
-            <property name="text">
-             <string>GPS Quality:</string>
-            </property>
-           </widget>
-          </item>
-          <item row="8" column="5">
-           <widget class="QLabel" name="gpsQualityLabel">
-            <property name="font">
-             <font>
-              <pointsize>16</pointsize>
-             </font>
-            </property>
-            <property name="text">
-             <string>UNKNOWN</string>
             </property>
            </widget>
           </item>
@@ -1812,7 +1948,7 @@
     <rect>
      <x>0</x>
      <y>0</y>
-     <width>934</width>
+     <width>945</width>
      <height>21</height>
     </rect>
    </property>

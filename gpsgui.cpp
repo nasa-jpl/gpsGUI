@@ -33,6 +33,9 @@ GpsGui::GpsGui(QWidget *parent)
     timeAxis.resize(vecSize);
 
     preparePlots();
+
+    setupUI();
+
     resetLEDs();
 
     ui->statusConnectionLED->setText("");
@@ -260,7 +263,53 @@ void GpsGui::receiveGPSMessage(gpsMessage m)
             } else {
                 ui->interpolationMissedStatus->setState(QLedLabel::StateOk);
             }
+            doStickyUpdate = true;
+        }
 
+        // Algorithm Status 2:
+        if((m.algorithmStatus2 != priorAlgorithmStatus2) && (!firstMessage) )
+        {
+            // Altitude Rejection bit 15:
+            if(getBit(m.algorithmStatus2, 15)) {
+                ui->altitudeRejectedStatus->setState(QLedLabel::StateError);
+                altitudeRejectionSticky = true;
+            } else {
+                ui->altitudeRejectedStatus->setState(QLedLabel::StateOk);
+            }
+            // ZUPT_MODE_ACTIVATED bit 16:
+            if(getBit(m.algorithmStatus2, 16)) {
+                ui->zuptActivatedStatus->setState(QLedLabel::StateError);
+                zuptActivatedSticky = true;
+            } else {
+                ui->zuptActivatedStatus->setState(QLedLabel::StateOk);
+            }
+            // ZUPT_MODE_VALID bit 17:
+            if(getBit(m.algorithmStatus2, 17)) {
+                ui->zuptValidStatus->setState(QLedLabel::StateError);
+                zuptValidSticky = true;
+            } else {
+                ui->zuptValidStatus->setState(QLedLabel::StateOk);
+            }
+            // RO_ZUPT_MODE bit 18:
+            if(getBit(m.algorithmStatus2, 18)) {
+                ui->zuptRotationModeStatus->setState(QLedLabel::StateError);
+                zuptRotationModeSticky = true;
+            } else {
+                ui->zuptRotationModeStatus->setState(QLedLabel::StateOk);
+            }
+            // RO_ZUPT_VALID bit 19:
+            if(getBit(m.algorithmStatus2, 19)) {
+                ui->zuptRotationValidStatus->setState(QLedLabel::StateError);
+                zuptRotationValidSticky = true;
+            } else {
+                ui->zuptRotationValidStatus->setState(QLedLabel::StateOk);
+            }
+            doStickyUpdate = true;
+        }
+
+        // Algorithm Status 4:
+        if((m.algorithmStatus4 != priorAlgorithmStatus4) && (!firstMessage) )
+        {
             if(getBit(m.algorithmStatus4, 28)) {
                 ui->flashWriteErrorStatus->setState(QLedLabel::StateError);
                 flashWriteErrorSticky = true;
@@ -274,18 +323,17 @@ void GpsGui::receiveGPSMessage(gpsMessage m)
             } else {
                 ui->flashEraseErrorStatus->setState(QLedLabel::StateOk);
             }
-
-
             doStickyUpdate = true;
-
-
-            priorAlgorithmStatus1 = m.algorithmStatus1;
-            priorAlgorithmStatus2 = m.algorithmStatus2;
-            priorAlgorithmStatus3 = m.algorithmStatus3;
-            priorAlgorithmStatus4 = m.algorithmStatus4;
-
         }
+
+
+        priorAlgorithmStatus1 = m.algorithmStatus1;
+        priorAlgorithmStatus2 = m.algorithmStatus2;
+        priorAlgorithmStatus3 = m.algorithmStatus3;
+        priorAlgorithmStatus4 = m.algorithmStatus4;
+
     }
+
 
     if(m.haveINSSystemStatus)
     {
@@ -546,7 +594,7 @@ void GpsGui::receiveGPSMessage(gpsMessage m)
 
         float deltaT = 0.0;
         deltaT = secondN - secondD; // navValidTime - utcDataValidityTime
-        qDebug() << "Seconds N: " << QString("%1").arg(secondN, 0, 'f', 10) << ", Seconds D: " << secondD << ", DeltaT: " << QString("%1").arg(deltaT, 0, 'f', 10) << "Counter: " << m.counter << "Old Counter: " << oldCounter << "DeltaCounter: " << m.counter-oldCounter;
+        //qDebug() << "Seconds N: " << QString("%1").arg(secondN, 0, 'f', 10) << ", Seconds D: " << secondD << ", DeltaT: " << QString("%1").arg(deltaT, 0, 'f', 10) << "Counter: " << m.counter << "Old Counter: " << oldCounter << "DeltaCounter: " << m.counter-oldCounter;
         ui->deltaTimeLabel->setText(QString("%1").arg(deltaT, 0, 'f', 10));
         oldCounter = m.counter;
     }
@@ -616,7 +664,7 @@ void GpsGui::preparePlots()
 
 
 
-    ui->plotAltitude->yAxis->setRange(0, 7620); // Altitude at 25k feet
+    ui->plotAltitude->yAxis->setRange(0, 9000); // Altitude at 25k feet
 
     ui->plotSpeed->yAxis->setRange(-275, 275); // 128 meters per second is 250 knots
 
@@ -708,6 +756,56 @@ void GpsGui::setPlotColors(QCustomPlot *p, bool dark)
         p->setBackground(QBrush(Qt::white));
         //p->graph()->setBrush(QBrush(Qt::black)); // sets an underfill for the line
     }
+}
+
+void GpsGui::setupUI()
+{
+    int ledSize = 20;
+    ui->statusHeartbeatLED->setSizeCustom(ledSize);
+    ui->statusConnectionLED->setSizeCustom(ledSize);
+    ui->statusCounterLED->setSizeCustom(ledSize);
+    ui->statusDecodeOkLED->setSizeCustom(ledSize);
+    ui->statusSatelliteRxLED->setSizeCustom(ledSize);
+    ui->altitudeSaturationStatus->setSizeCustom(ledSize);
+    ui->flashEraseErrorStatus->setSizeCustom(ledSize);
+    ui->flashWriteErrorStatus->setSizeCustom(ledSize);
+    ui->gpsDetectedSS2Status->setSizeCustom(ledSize);
+    ui->gpsReceivedStatus->setSizeCustom(ledSize);
+    ui->gpsRejectedStatus->setSizeCustom(ledSize);
+    ui->gpsValidStatus->setSizeCustom(ledSize);
+    ui->gpsWaitingStatus->setSizeCustom(ledSize);
+    ui->interpolationMissedStatus->setSizeCustom(ledSize);
+    ui->navStatus->setSizeCustom(ledSize);
+    ui->outputAFullStatus->setSizeCustom(ledSize);
+    ui->outputBFullStatus->setSizeCustom(ledSize);
+    ui->speedSaturationStatus->setSizeCustom(ledSize);
+    ui->altitudeSaturationStatus->setSizeCustom(ledSize);
+
+    ui->altitudeSaturationSticky->setSizeCustom(ledSize);
+    ui->flashEraseErrorSticky->setSizeCustom(ledSize);
+    ui->flashWriteErrorSticky->setSizeCustom(ledSize);
+    ui->gpsDetectedSS2Sticky->setSizeCustom(ledSize);
+    ui->gpsReceivedSticky->setSizeCustom(ledSize);
+    ui->gpsRejectedSticky->setSizeCustom(ledSize);
+    ui->gpsValidSticky->setSizeCustom(ledSize);
+    ui->gpsWaitingSticky->setSizeCustom(ledSize);
+    ui->interpolationMissedSticky->setSizeCustom(ledSize);
+    ui->navigationSticky->setSizeCustom(ledSize);
+    ui->outputAFullSticky->setSizeCustom(ledSize);
+    ui->outputBFullSticky->setSizeCustom(ledSize);
+    ui->speedSaturationSticky->setSizeCustom(ledSize);
+    ui->systemReadySS3Sticky->setSizeCustom(ledSize);
+
+    ui->zuptActivatedStatus->setSizeCustom(ledSize);
+    ui->zuptActivatedSticky->setSizeCustom(ledSize);
+    ui->zuptRotationModeStatus->setSizeCustom(ledSize);
+    ui->zuptRotationModeSticky->setSizeCustom(ledSize);
+    ui->zuptRotationValidStatus->setSizeCustom(ledSize);
+    ui->zuptRotationValidSticky->setSizeCustom(ledSize);
+    ui->zuptValidStatus->setSizeCustom(ledSize);
+    ui->zuptValidSticky->setSizeCustom(ledSize);
+    ui->altitudeRejectedStatus->setSizeCustom(ledSize);
+    ui->altitudeRejectedSticky->setSizeCustom(ledSize);
 }
 
 void GpsGui::updatePlots()
@@ -862,6 +960,30 @@ void GpsGui::processStickyStatus()
     else
         ui->flashEraseErrorSticky->setState(QLedLabel::StateOk);
 
+    if(zuptActivatedSticky)
+        ui->zuptActivatedSticky->setState(QLedLabel::StateError);
+    else
+        ui->zuptActivatedSticky->setState(QLedLabel::StateOk);
+
+    if(zuptValidSticky)
+        ui->zuptValidSticky->setState(QLedLabel::StateError);
+    else
+        ui->zuptValidSticky->setState(QLedLabel::StateOk);
+
+    if(zuptRotationModeSticky)
+        ui->zuptRotationModeSticky->setState(QLedLabel::StateError);
+    else
+        ui->zuptRotationModeSticky->setState(QLedLabel::StateOk);
+
+    if(zuptRotationValidSticky)
+        ui->zuptRotationValidSticky->setState(QLedLabel::StateError);
+    else
+        ui->zuptRotationValidSticky->setState(QLedLabel::StateOk);
+
+    if(altitudeRejectionSticky)
+        ui->altitudeRejectedSticky->setState(QLedLabel::StateError);
+    else
+        ui->altitudeRejectedSticky->setState(QLedLabel::StateOk);
 }
 
 void GpsGui::on_connectBtn_clicked()
@@ -943,6 +1065,13 @@ void GpsGui::on_clearErrorBtn_clicked()
     outputBFullSticky = false;
     flashWriteErrorSticky = false;
     flashEraseErrorSticky = false;
+
+    zuptActivatedSticky = false;
+    zuptValidSticky = false;
+    zuptRotationModeSticky = false;
+    zuptRotationValidSticky = false;
+
+    altitudeRejectionSticky = false;
 
     processStickyStatus();
 
