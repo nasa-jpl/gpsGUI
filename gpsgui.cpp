@@ -1076,6 +1076,10 @@ void GpsGui::on_clearErrorBtn_clicked()
     processStickyStatus();
 
     firstMessage = true;
+    priorAlgorithmStatus1 = 0;
+    priorAlgorithmStatus2 = 0;
+    priorAlgorithmStatus3 = 0;
+    priorAlgorithmStatus4 = 0;
 
     gpsMessageHeartbeat.start();
     ui->statusbar->showMessage("NOTE: Resetting error and warning LEDs", 2000);
@@ -1129,6 +1133,12 @@ void GpsGui::on_replayGPSBtn_clicked()
     //emit setBinaryLogReplayFilename(ui->gpsBinLogOpenEdit->text());
     resetLEDs();
     firstMessage = true;
+
+    priorAlgorithmStatus1 = 0;
+    priorAlgorithmStatus2 = 0;
+    priorAlgorithmStatus3 = 0;
+    priorAlgorithmStatus4 = 0;
+    oldCounter = 0;
 
     qDebug() << "Starting replay of file:" << ui->gpsBinLogOpenEdit->text();
     emit startGPSReplay();
