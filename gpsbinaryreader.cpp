@@ -46,6 +46,11 @@ void gpsBinaryReader::initialize()
     // todo: clear out m. m.HaveThings = false;
 }
 
+uint16_t gpsBinaryReader::getDataPos()
+{
+    return dataPos;
+}
+
 // Decoder functions:
 
 void gpsBinaryReader::processData()

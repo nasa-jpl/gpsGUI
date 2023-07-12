@@ -417,6 +417,7 @@ public:
     gpsBinaryReader(QByteArray rawData);
     void insertData(QByteArray rawData);
     gpsMessage getMessage();
+    uint16_t getDataPos();
 
     messageKinds getMessageType();
     uint32_t getCounter();

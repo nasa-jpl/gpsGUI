@@ -129,6 +129,11 @@ void gpsNetwork::readData()
     data = tcpsocket->readAll();
     tcpsocket->commitTransaction();
 
+    uint16_t networkDataSize = (uint16_t)data.size();
+    uint16_t decodedDataSize = 0;
+    uint16_t decodedRoundCount = 0;
+
+    do {
     QString gpsdataString;
     gpsdataString = QString("Size: %1, start: 0x%2").arg(data.size()).arg((unsigned char)data.at(0), 2, 16, QChar('0'));
 
@@ -149,6 +154,12 @@ void gpsNetwork::readData()
 
     //emit haveGPSString(gpsdataString);
     emit haveGPSMessage(m);
+    decodedDataSize += reader.getDataPos();
+    decodedRoundCount++;
+    if(networkDataSize != decodedDataSize)
+        emit statusMessage(QString("NOTE: Decoded %1 bytes but network size was %2 bytes, going around again. Round=%3").arg(decodedDataSize).arg(networkDataSize).arg(decodedRoundCount));
+    } while(decodedDataSize < networkDataSize);
+
     readingData.unlock();
 }
 
