@@ -120,6 +120,7 @@ void gpsBinaryLogger::closeFileWriting()
 {
     if(fileIsOpen)
     {
+        writeBufferToFile(); // write last bits of the buffer to the file and clear the buffer
         std::lock_guard<std::mutex>lockfile(fileCloseMutex);
         if(fileWritePtr != NULL)
         {
@@ -198,16 +199,9 @@ void gpsBinaryLogger::writeBufferToFile()
         size_t size = 0;
         size_t nWritten = 0;
 
-        // The following "magicId" can be enabled to aid in debugging and searching the binary file:
-        //QByteArray magicId;
-        //magicId.setRawData("\xCA\xFE\x00\x11\x22\x33\x44\x55\x66\x77\x88\x99\xaa\xbb\xcc\xdd\xee\xff", 18);
-
         for(uint16_t i=0; i < bufSize; i++)
         {
             temp = buffer.at(i);
-            // TESTING ONLY:
-            //temp.append(magicId);
-            //temp = QByteArray("\xC0\xFF\xEE\xBA\xBE\x00\x00\x44\x44\x88\x88\xDD\xDD", 13);
             size = temp.size();
             if(size != 0)
             {
