@@ -112,7 +112,7 @@ void gpsBinaryLogger::openFileWriting()
         emit haveStatusMessage(logRankingStr + QString("Opened gps binary log file [%1] successfully for binary append write.").arg(filename));
         fileIsOpen = true;
     } else {
-        emit haveStatusMessage(logRankingStr + "Error, file was already open! Expect bad things!");
+        emit haveStatusMessage(logRankingStr + "Note, file was already open! Continuing with same log file.");
     }
 }
 

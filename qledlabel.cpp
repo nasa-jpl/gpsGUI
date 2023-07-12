@@ -17,6 +17,12 @@ QLedLabel::QLedLabel(QWidget* parent) :
     lastState = QLedLabel::StateInitial;
     setState(StateOkBlue);
     setFixedSize(SIZE, SIZE);
+
+#ifdef __APPLE__
+    QFont f("Monaco", SIZE, QFont::Normal);
+    this->setFont(f);
+#endif
+
     this->setAlignment(Qt::AlignCenter);
 }
 
@@ -94,7 +100,12 @@ void QLedLabel::setState(State state)
         break;
     case StateError:
         setStyleSheet(redSS);
+#ifdef __APPLE__
+        //this->setText("✖");
+        this->setText("X");
+#else
         this->setText("❌");
+#endif
         this->setToolTip("ERROR");
         break;
     case StateUnknown:
