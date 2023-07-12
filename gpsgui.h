@@ -155,6 +155,11 @@ private:
     unsigned char getBit(uint32_t d, unsigned char bit);
     void processStickyStatus();
     void resetLEDs();
+    void setupUI();
+
+    // Sticky is true when in error or warning mode.
+    // Sticky is false when in good mode.
+
     bool navStatusSticky = false;
     bool gpsReceivedSticky = false;
     bool gpsValidSticky = false;
@@ -171,6 +176,14 @@ private:
     bool outputBFullSticky = false;
     bool flashWriteErrorSticky = false;
     bool flashEraseErrorSticky = false;
+
+    bool zuptActivatedSticky = false;
+    bool zuptValidSticky = false;
+
+    bool zuptRotationModeSticky = false;
+    bool zuptRotationValidSticky = false;
+
+    bool altitudeRejectionSticky = false;
 
 
 };
