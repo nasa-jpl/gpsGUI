@@ -1125,6 +1125,12 @@ void GpsGui::resetLEDs()
     ui->flashEraseErrorStatus->setState(QLedLabel::StateOkBlue);
     ui->flashWriteErrorStatus->setState(QLedLabel::StateOkBlue);
 
+    ui->zuptActivatedStatus->setState(QLedLabel::StateOkBlue);
+    ui->zuptRotationModeStatus->setState(QLedLabel::StateOkBlue);
+    ui->zuptRotationValidStatus->setState(QLedLabel::StateOkBlue);
+    ui->zuptValidStatus->setState(QLedLabel::StateOkBlue);
+    ui->altitudeRejectedStatus->setState(QLedLabel::StateOkBlue);
+
     ui->gpsQualityLabel->setText("UNKNOWN");
 }
 
