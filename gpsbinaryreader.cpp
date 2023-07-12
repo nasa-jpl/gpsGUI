@@ -824,7 +824,9 @@ void gpsBinaryReader::getMessageSum()
     //messageSum = std::accumulate(rawData.begin(), rawData.end()-4, 0);
 
     uint32_t sum = 0;
-    for(int i=0; i < rawData.length()-4; i++)
+    //uint32_t chkPos = rawData.length()-4;
+    uint32_t chkPos = dataPos;
+    for(uint32_t i=0; i < chkPos; i++)
     {
         sum += (unsigned char)rawData.at(i);
     }

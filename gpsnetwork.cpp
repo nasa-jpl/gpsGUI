@@ -161,7 +161,7 @@ void gpsNetwork::readData()
             emit statusMessage(QString("NOTE: Decoded %1 bytes but network size was %2 bytes, going around again. Round=%3, trimmed data size: %4, this message counter: %5").arg(decodedDataSize).arg(networkDataSize).arg(decodedRoundCount).arg(data.size()).arg(m.counter));
             qDebug() << "Note: Decoded " << decodedDataSize << "bytes from message but network size was " << networkDataSize << ", going around again. Round: " << decodedRoundCount << ", trimmed data size: " << data.size() << ", this message counter:" << m.counter;
         }
-    } while(decodedDataSize < networkDataSize);
+    } while( (decodedDataSize < networkDataSize) && (networkDataSize !=0) && (data.size() != 0));
 
     readingData.unlock();
 }
