@@ -31,7 +31,7 @@ gpsNetwork::gpsNetwork(QObject *parent) : QObject(parent)
 
     connect(this, &gpsNetwork::startSecondaryBinaryLog, &binLoggerSecondary, &gpsBinaryLogger::beginLogToFilenameNow);
     connect(this, &gpsNetwork::sendStopSecondaryBinaryLog, &binLoggerSecondary, &gpsBinaryLogger::stopLogging);
-
+    qDebug() << "GPS Network Constructed.";
 }
 
 gpsNetwork::~gpsNetwork()
@@ -134,30 +134,33 @@ void gpsNetwork::readData()
     uint16_t decodedRoundCount = 0;
 
     do {
-    QString gpsdataString;
-    gpsdataString = QString("Size: %1, start: 0x%2").arg(data.size()).arg((unsigned char)data.at(0), 2, 16, QChar('0'));
+        QString gpsdataString;
+        gpsdataString = QString("Size: %1, start: 0x%2").arg(data.size()).arg((unsigned char)data.at(0), 2, 16, QChar('0'));
 
-    // Begin decoding in the reader:
-    reader.insertData(deepCopyData(data));
-    gpsMessage m = reader.getMessage(); // copy of entire message
-    //reader.debugThis();
-    if(m.validDecode)
-    {
-        dataPrimary = deepCopyData(data);
-        dataSecondary = deepCopyData(data);
+        // Begin decoding in the reader:
+        reader.insertData(deepCopyData(data));
+        gpsMessage m = reader.getMessage(); // copy of entire message
+        //reader.debugThis();
+        if(m.validDecode)
+        {
+            dataPrimary = deepCopyData(data);
+            dataSecondary = deepCopyData(data);
 
-        binLoggerPrimary.insertData(dataPrimary); // log to binary file
-        binLoggerSecondary.insertData(dataSecondary); // secondary log
-    } else {
-        emit statusMessage(QString("WARNING: Bad GPS decode at counter %1. Error message: [%2] ").arg(m.counter).arg(m.lastDecodeErrorMessage));
-    }
+            binLoggerPrimary.insertData(dataPrimary); // log to binary file
+            binLoggerSecondary.insertData(dataSecondary); // secondary log
+        } else {
+            emit statusMessage(QString("WARNING: Bad GPS decode at counter %1. Error message: [%2] ").arg(m.counter).arg(m.lastDecodeErrorMessage));
+        }
 
-    //emit haveGPSString(gpsdataString);
-    emit haveGPSMessage(m);
-    decodedDataSize += reader.getDataPos();
-    decodedRoundCount++;
-    if(networkDataSize != decodedDataSize)
-        emit statusMessage(QString("NOTE: Decoded %1 bytes but network size was %2 bytes, going around again. Round=%3").arg(decodedDataSize).arg(networkDataSize).arg(decodedRoundCount));
+        //emit haveGPSString(gpsdataString);
+        emit haveGPSMessage(m);
+        decodedDataSize += reader.getDataPos();
+        decodedRoundCount++;
+        if(networkDataSize != decodedDataSize) {
+            data.remove(0, decodedDataSize); // trim off part already decoded
+            emit statusMessage(QString("NOTE: Decoded %1 bytes but network size was %2 bytes, going around again. Round=%3, trimmed data size: %4, this message counter: %5").arg(decodedDataSize).arg(networkDataSize).arg(decodedRoundCount).arg(data.size()).arg(m.counter));
+            qDebug() << "Note: Decoded " << decodedDataSize << "bytes from message but network size was " << networkDataSize << ", going around again. Round: " << decodedRoundCount << ", trimmed data size: " << data.size() << ", this message counter:" << m.counter;
+        }
     } while(decodedDataSize < networkDataSize);
 
     readingData.unlock();

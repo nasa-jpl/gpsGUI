@@ -267,7 +267,7 @@ void GpsGui::receiveGPSMessage(gpsMessage m)
         }
 
         // Algorithm Status 2:
-        if((m.algorithmStatus2 != priorAlgorithmStatus2) && (!firstMessage) )
+        if((m.algorithmStatus2 != priorAlgorithmStatus2) || (firstMessage) )
         {
             // Altitude Rejection bit 15:
             if(getBit(m.algorithmStatus2, 15)) {
@@ -308,7 +308,7 @@ void GpsGui::receiveGPSMessage(gpsMessage m)
         }
 
         // Algorithm Status 4:
-        if((m.algorithmStatus4 != priorAlgorithmStatus4) && (!firstMessage) )
+        if((m.algorithmStatus4 != priorAlgorithmStatus4) || (firstMessage) )
         {
             if(getBit(m.algorithmStatus4, 28)) {
                 ui->flashWriteErrorStatus->setState(QLedLabel::StateError);

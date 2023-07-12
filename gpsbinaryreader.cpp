@@ -315,7 +315,8 @@ void gpsBinaryReader::processData()
     getMessageSum();
 
     uint32_t oldPos = dataPos; // retain previous position in case it is needed later.
-    m.claimedMessageSum = makeDWord(rawData, rawData.length() - 4);
+    m.claimedMessageSum = makeDWord(rawData, oldPos);
+    //m.claimedMessageSum = makeDWord(rawData, rawData.length() - 4);
 
     (void)oldPos;
 
