@@ -164,7 +164,12 @@ void gpsNetwork::readData()
         decodedDataSize = reader.getDataPos();
         decodedRoundCount++;
         //qDebug() << "NetworkDataSize:" << networkDataSize << ", decoded size: " << decodedDataSize << ", reader position: " << reader.getDataPos();
-        if(networkDataSize != decodedDataSizeCumulative) {
+        if(data.size() < 392) {
+            readingData.unlock();
+            return;
+        }
+
+        if(networkDataSize > decodedDataSizeCumulative) {
             if( (decodedDataSize == 0) ) {
                 if(data.size() > 1)
                     data.remove(0,1); // snip off one byte.
@@ -178,6 +183,7 @@ void gpsNetwork::readData()
         decodeCount++;
         if(decodeCount > 393) {
             emit statusMessage(QString("Error: Too many (393) bad decode attempts, giving up on TCP transaction."));
+            readingData.unlock();
             return;
         }
     } while( (decodedDataSize < networkDataSize) && (networkDataSize !=0) && (data.size() > 2));
