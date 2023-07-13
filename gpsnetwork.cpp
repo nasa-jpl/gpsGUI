@@ -192,7 +192,7 @@ void gpsNetwork::readData()
                 return;
             }
             emit statusMessage(QString("NOTE: Decoded %1 bytes (total) but network size was %2 bytes, going around again. Round=%3, trimmed data size: %4, this message counter: %5, dataPos: %6").arg(decodedDataSizeCumulative).arg(networkDataSize).arg(decodedRoundCount).arg(data.size()).arg(m.counter).arg(reader.getDataPos()));
-            qDebug() << "Note: Decoded " << decodedDataSizeCumulative << "bytes (total) from message but network size was " << networkDataSize << ", going around again. Round: " << decodedRoundCount << ", trimmed data size: " << data.size() << ", this message counter:" << m.counter << "dataPos from message:" << reader.getDataPos();
+            //qDebug() << "Note: Decoded " << decodedDataSizeCumulative << "bytes (total) from message but network size was " << networkDataSize << ", going around again. Round: " << decodedRoundCount << ", trimmed data size: " << data.size() << ", this message counter:" << m.counter << "dataPos from message:" << reader.getDataPos();
         }
         decodeCount++;
         if(decodeCount > 393) {
