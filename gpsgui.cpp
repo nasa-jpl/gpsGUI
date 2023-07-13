@@ -152,9 +152,9 @@ void GpsGui::receiveGPSMessage(gpsMessage m)
     } else {
         ui->statusDecodeOkLED->setState(QLedLabel::StateError);
         ui->statusDecodeOkLabel->setText("NG");
-        qDebug() << "ERROR: Invalid message decode.";
-        qDebug() << "Message debug dump:";
-        on_debugBtn_clicked();
+        qDebug() << "ERROR: Invalid message decode. Conter:" << m.counter;
+        //qDebug() << "Message debug dump:";
+        //on_debugBtn_clicked();
         return;
     }
 

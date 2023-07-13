@@ -122,21 +122,27 @@ void gpsNetwork::readData()
 {
     readingData.lock();
     QByteArray data;
+    QByteArray dataNetworkSocket;
     QByteArray dataPrimary;
     QByteArray dataSecondary;
 
     tcpsocket->startTransaction();
-    data = tcpsocket->readAll();
+    dataNetworkSocket = tcpsocket->readAll();
     tcpsocket->commitTransaction();
+    data = deepCopyData(dataNetworkSocket); // we own this, it will not change if additional data come through while we're here.
+
+    int decodeCount = 0;
 
     uint16_t networkDataSize = (uint16_t)data.size();
     uint16_t decodedDataSize = 0;
+    uint16_t decodedDataSizeCumulative = 0;
     uint16_t decodedRoundCount = 0;
 
-    do {
-        QString gpsdataString;
-        gpsdataString = QString("Size: %1, start: 0x%2").arg(data.size()).arg((unsigned char)data.at(0), 2, 16, QChar('0'));
 
+    do {
+        //QString gpsdataString;
+        //gpsdataString = QString("Size: %1, start: 0x%2").arg(data.size()).arg((unsigned char)data.at(0), 2, 16, QChar('0'));
+        //qDebug() << gpsdataString;
         // Begin decoding in the reader:
         reader.insertData(deepCopyData(data));
         gpsMessage m = reader.getMessage(); // copy of entire message
@@ -154,14 +160,27 @@ void gpsNetwork::readData()
 
         //emit haveGPSString(gpsdataString);
         emit haveGPSMessage(m);
-        decodedDataSize += reader.getDataPos();
+        decodedDataSizeCumulative += reader.getDataPos();
+        decodedDataSize = reader.getDataPos();
         decodedRoundCount++;
-        if(networkDataSize != decodedDataSize) {
-            data.remove(0, decodedDataSize); // trim off part already decoded
-            emit statusMessage(QString("NOTE: Decoded %1 bytes but network size was %2 bytes, going around again. Round=%3, trimmed data size: %4, this message counter: %5").arg(decodedDataSize).arg(networkDataSize).arg(decodedRoundCount).arg(data.size()).arg(m.counter));
-            qDebug() << "Note: Decoded " << decodedDataSize << "bytes from message but network size was " << networkDataSize << ", going around again. Round: " << decodedRoundCount << ", trimmed data size: " << data.size() << ", this message counter:" << m.counter;
+        //qDebug() << "NetworkDataSize:" << networkDataSize << ", decoded size: " << decodedDataSize << ", reader position: " << reader.getDataPos();
+        if(networkDataSize != decodedDataSizeCumulative) {
+            if( (decodedDataSize == 0) ) {
+                if(data.size() > 1)
+                    data.remove(0,1); // snip off one byte.
+            } else {
+                if(data.size() > decodedDataSize)
+                    data.remove(0, decodedDataSize); // trim off part already decoded
+            }
+            emit statusMessage(QString("NOTE: Decoded %1 bytes (total) but network size was %2 bytes, going around again. Round=%3, trimmed data size: %4, this message counter: %5, dataPos: %6").arg(decodedDataSizeCumulative).arg(networkDataSize).arg(decodedRoundCount).arg(data.size()).arg(m.counter).arg(reader.getDataPos()));
+            qDebug() << "Note: Decoded " << decodedDataSizeCumulative << "bytes (total) from message but network size was " << networkDataSize << ", going around again. Round: " << decodedRoundCount << ", trimmed data size: " << data.size() << ", this message counter:" << m.counter << "dataPos from message:" << reader.getDataPos();
         }
-    } while( (decodedDataSize < networkDataSize) && (networkDataSize !=0) && (data.size() != 0));
+        decodeCount++;
+        if(decodeCount > 393) {
+            emit statusMessage(QString("Error: Too many (393) bad decode attempts, giving up on TCP transaction."));
+            return;
+        }
+    } while( (decodedDataSize < networkDataSize) && (networkDataSize !=0) && (data.size() > 2));
 
     readingData.unlock();
 }
