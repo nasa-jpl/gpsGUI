@@ -17,6 +17,12 @@ gpsBinaryReader::gpsBinaryReader(QByteArray rawData) : rawData(rawData)
         processData();
 }
 
+void gpsBinaryReader::resetCounter()
+{
+    oldCounter = 0;
+    firstRun = true;
+}
+
 void gpsBinaryReader::insertData(QByteArray rawData)
 {
     initialize();

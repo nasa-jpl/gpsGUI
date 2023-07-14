@@ -54,6 +54,7 @@ void gpsBinaryFileReader::startProcessFile()
         return;
 
     emit haveStatusMessage(QString("Starting to read file [%1]").arg(filename));
+    reader.resetCounter(); // so as to not mark the first message of additional files as miscounted.
     while(ok && keepGoing)
     {
 
