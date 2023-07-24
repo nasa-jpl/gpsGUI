@@ -69,7 +69,7 @@ void gpsNetwork::connectToGPS(QString gpsHost, int gpsPort, QString gpsBinaryLog
 
     this->gpsHost = gpsHost;
     this->gpsPort = gpsPort;
-    emit statusMessage(QString("About to connect to host ") + gpsHost);
+    emit statusMessage(QString("About to connect to host %1 on port %2").arg(gpsHost).arg(gpsPort));
     this->createConnection();
 
 }
