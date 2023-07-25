@@ -27,6 +27,7 @@ class gpsNetwork : public QObject
     bool createConnection();
     std::mutex readingData;
     QByteArray deepCopyData(const QByteArray data);
+    QByteArray deepCopyData(const QByteArray data, int maxLength);
 
 private slots:
     // for the TCP socket:

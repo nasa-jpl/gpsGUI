@@ -138,6 +138,7 @@ void gpsNetwork::readData()
     uint16_t decodedDataSizeCumulative = 0;
     uint16_t decodedRoundCount = 0;
 
+    volatile int debugCounter = 0;
 
     do {
         //QString gpsdataString;
@@ -149,22 +150,25 @@ void gpsNetwork::readData()
         //reader.debugThis();
         if(m.validDecode)
         {
-            dataPrimary = deepCopyData(data);
-            dataSecondary = deepCopyData(data);
+            // copy only as much as was read.
+            dataPrimary = deepCopyData(data, reader.getDataPos());
+            dataSecondary = deepCopyData(data, reader.getDataPos());
 
             binLoggerPrimary.insertData(dataPrimary); // log to binary file
             binLoggerSecondary.insertData(dataSecondary); // secondary log
         } else {
+            debugCounter++;
             emit statusMessage(QString("WARNING: Bad GPS decode at counter %1. Error message: [%2] ").arg(m.counter).arg(m.lastDecodeErrorMessage));
         }
 
         //emit haveGPSString(gpsdataString);
-        emit haveGPSMessage(m);
+        emit haveGPSMessage(m); // TODO: Move to above conditional for valid only.
         decodedDataSizeCumulative += reader.getDataPos();
         decodedDataSize = reader.getDataPos();
         decodedRoundCount++;
         //qDebug() << "NetworkDataSize:" << networkDataSize << ", decoded size: " << decodedDataSize << ", reader position: " << reader.getDataPos();
         if(data.size() < 392) {
+            // too small to be another message of any message we know of
             readingData.unlock();
             return;
         }
@@ -259,6 +263,23 @@ QByteArray gpsNetwork::deepCopyData(const QByteArray data)
 {
     // This function assures a copy is made at some annoying expense
     uint16_t sourceLength = data.length();
+    QByteArray dest;
+    volatile char temp = 0;
+    for(int i=0; i < sourceLength; i++)
+    {
+        temp = data.at(i);
+        dest.append(temp);
+    }
+    return dest;
+}
+
+QByteArray gpsNetwork::deepCopyData(const QByteArray data, int maxLength)
+{
+    // This function assures a copy is made at some annoying expense
+    // Optionally, in this version, the maximum length allowed can be specified.
+    uint16_t sourceLength = data.length();
+    if(maxLength < sourceLength)
+        sourceLength = maxLength;
     QByteArray dest;
     volatile char temp = 0;
     for(int i=0; i < sourceLength; i++)
