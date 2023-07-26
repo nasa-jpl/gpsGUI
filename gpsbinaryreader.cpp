@@ -37,7 +37,7 @@ gpsMessage gpsBinaryReader::getMessage()
 {
     if(!m.validDecode)
     {
-        qDebug() << "Warning, returning invalid data with counter " << m.counter;
+        //qDebug() << "Warning, returning invalid data with counter " << m.counter;
     }
     return m;
 }

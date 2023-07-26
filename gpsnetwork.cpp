@@ -141,9 +141,6 @@ void gpsNetwork::readData()
     volatile int debugCounter = 0;
 
     do {
-        //QString gpsdataString;
-        //gpsdataString = QString("Size: %1, start: 0x%2").arg(data.size()).arg((unsigned char)data.at(0), 2, 16, QChar('0'));
-        //qDebug() << gpsdataString;
         // Begin decoding in the reader:
         reader.insertData(deepCopyData(data));
         gpsMessage m = reader.getMessage(); // copy of entire message
@@ -161,14 +158,14 @@ void gpsNetwork::readData()
             emit statusMessage(QString("WARNING: Bad GPS decode at counter %1. Error message: [%2] ").arg(m.counter).arg(m.lastDecodeErrorMessage));
         }
 
-        //emit haveGPSString(gpsdataString);
-        emit haveGPSMessage(m); // TODO: Move to above conditional for valid only.
+        emit haveGPSMessage(m); // This is here so that the GUI user will know of any invalid decodes.
         decodedDataSizeCumulative += reader.getDataPos();
         decodedDataSize = reader.getDataPos();
         decodedRoundCount++;
-        //qDebug() << "NetworkDataSize:" << networkDataSize << ", decoded size: " << decodedDataSize << ", reader position: " << reader.getDataPos();
+
         if(data.size() < 392) {
             // too small to be another message of any message we know of
+            emit statusMessage(QString("Error: Data too small to search further. Giving up on transaction. Transaction had %1 attempted decodes.").arg(decodeCount));
             readingData.unlock();
             return;
         }
@@ -191,16 +188,16 @@ void gpsNetwork::readData()
             } else {
                 // No point going further. We decoded some but can't trim it out.
                 emit statusMessage(QString("Error: Data too small to search further. Giving up on transaction. Transaction had %1 attempted decodes.").arg(decodeCount));
-                emit statusMessage(QString("Status at error: Data size: %1, cumulative decode size: %2.").arg(data.size()).arg(decodedDataSizeCumulative));
                 readingData.unlock();
                 return;
             }
-            emit statusMessage(QString("NOTE: Decoded %1 bytes (total) but network size was %2 bytes, going around again. Round=%3, trimmed data size: %4, this message counter: %5, dataPos: %6").arg(decodedDataSizeCumulative).arg(networkDataSize).arg(decodedRoundCount).arg(data.size()).arg(m.counter).arg(reader.getDataPos()));
+            //emit statusMessage(QString("NOTE: Decoded %1 bytes (total) but network size was %2 bytes, going around again. Round=%3, trimmed data size: %4, this message counter: %5, dataPos: %6").arg(decodedDataSizeCumulative).arg(networkDataSize).arg(decodedRoundCount).arg(data.size()).arg(m.counter).arg(reader.getDataPos()));
+            emit statusMessage(QString("Decoding additional transaction data at counter %1, round %2.").arg(m.counter).arg(decodedRoundCount));
             //qDebug() << "Note: Decoded " << decodedDataSizeCumulative << "bytes (total) from message but network size was " << networkDataSize << ", going around again. Round: " << decodedRoundCount << ", trimmed data size: " << data.size() << ", this message counter:" << m.counter << "dataPos from message:" << reader.getDataPos();
         }
         decodeCount++;
         if(decodeCount > 393) {
-            emit statusMessage(QString("Error: Too many (%1) bad decode attempts, giving up on TCP transaction.").arg(decodeCount));
+            emit statusMessage(QString("Error: Too many (%1) bad decode attempts, giving up on TCP transaction.").arg(decodedRoundCount));
             emit statusMessage(QString("Status at error: Data size: %1, cumulative decode size: %2.").arg(data.size()).arg(decodedDataSizeCumulative));
             readingData.unlock();
             return;
