@@ -29,6 +29,7 @@ private:
     QString greenSS;
     QString blueSS;
     QString orangeSS;
+    QString yellowSS;
     QString redSS;
     State lastState = StateOkBlue;
     void setupSS(int dotSize);
