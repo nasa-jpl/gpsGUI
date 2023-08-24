@@ -52,6 +52,23 @@ void QLedLabel::setupSS(int dotSize)
                                           color: black;\
                                       ").arg(dotSize/2).arg(dotSize/2).arg(dotSize).arg(dotSize/2);
 
+    yellowSS = QString("height: %1px;\
+                                        width: %2px;\
+                                        background-color: #ffff00;\
+                                        border-radius: 2px;\
+                                        border: 1px solid black;\
+                                        position: relative;\
+                                        position: absolute;\
+                                        top: 0;\
+                                        bottom: 0;\
+                                        left: 0;\
+                                        right: 0;\
+                                        font-size: %3px; \
+                                        color: #FFF;\
+                                        line-height: %4px;\
+                                        text-align: center;\
+                                        color: black;\
+                                    ").arg(dotSize/2).arg(dotSize/2).arg(dotSize).arg(dotSize/2);
 
     redSS = QString("height: %1px;\
                                         width: %2px;\
@@ -94,8 +111,14 @@ void QLedLabel::setState(State state)
         this->setToolTip("OK");
         break;
     case StateWarning:
-        setStyleSheet(orangeSS);
-        this->setText("!!");
+        setStyleSheet(yellowSS);
+        this->setText("?");
+        //this->setText("!");
+        //this->setText("‼");
+        //this->setText("▵");
+        //this->setText("△");
+        //this->setText("▲");
+        //this->setText("⚠");
         this->setToolTip("WARNING");
         break;
     case StateError:
