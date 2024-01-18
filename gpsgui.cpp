@@ -103,6 +103,10 @@ GpsGui::GpsGui(QWidget *parent)
 
     connect(this, SIGNAL(sendMapCoordinates(double,double)), map, SLOT(handleMapUpdatePosition(double,double)));
     connect(this, SIGNAL(sendMapRotation(float)), map, SLOT(handleMapUpdateRotation(float)));
+
+    reconnectTimer.setInterval(1000); // reconnect one second after connection lost
+    reconnectTimer.setSingleShot(true);
+    connect(&reconnectTimer, SIGNAL(timeout()), this, SLOT(handleAutoReconnectTimer()));
 }
 
 GpsGui::~GpsGui()
@@ -1018,6 +1022,13 @@ void GpsGui::processStickyStatus()
         ui->altitudeRejectedSticky->setState(QLedLabel::StateOk);
 }
 
+void GpsGui::handleAutoReconnectTimer() {
+    if(gpsConnectionError) {
+        on_connectBtn_clicked();
+    }
+    reconnectTimer.stop();
+}
+
 void GpsGui::on_connectBtn_clicked()
 {
     QString binaryLogFilename = ui->gpsBinLogEdit->text();
@@ -1054,6 +1065,11 @@ void GpsGui::handleGPSConnectionError(int errorNumber)
     ui->statusConnectionLED->setState(QLedLabel::StateError);
     ui->statusConnectedLabel->setText(QString("NG:%1").arg(errorNumber));
     ui->statusbar->showMessage(QString("GPS Connection Error: %1").arg(errorNumber), 5000);
+    gpsConnectionError = true;
+    if(ui->autoReconnectChk->isChecked()) {
+        handleErrorMessage("Connect Error, reconnecting to GPS in 1 second.");
+        reconnectTimer.start();
+    }
 }
 
 void GpsGui::handleGPSConnectionGood()
@@ -1063,17 +1079,30 @@ void GpsGui::handleGPSConnectionGood()
 
     ui->statusConnectedLabel->setText("OK");
     ui->statusbar->showMessage("GPS Connection GOOD", 2000);
+    handleStatusMessage("GPS Connection GOOD");
+    reconnectTimer.stop();
+    gpsConnectionError = false;
 }
 
 void GpsGui::handleGPSTimeout()
 {
+    // Heartbeat checker comes here.
     ui->statusbar->showMessage("ERROR: GPS Data Timeout", 2000);
     ui->statusHeartbeatLED->setState(QLedLabel::StateError);
+    gpsConnectionError = true;
+}
+
+void GpsGui::handleAutoConnectionCycleTimer() {
+    // disconnect, reconnect
 }
 
 void GpsGui::handleErrorMessage(QString errorMessage)
 {
     ui->logViewer->appendPlainText(errorMessage);
+}
+
+void GpsGui::handleStatusMessage(QString s) {
+    ui->logViewer->appendPlainText(s);
 }
 
 void GpsGui::on_clearErrorBtn_clicked()

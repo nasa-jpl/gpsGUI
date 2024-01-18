@@ -77,6 +77,9 @@ class GpsGui : public QMainWindow
 
     void setPlotColors(QCustomPlot *p, bool dark);
 
+    bool gpsConnectionError = false;
+    QTimer reconnectTimer;
+    QTimer connectionCycleTimer;
     QTimer gpsMessageHeartbeat;
 
     QElapsedTimer gnssStatusTime;
@@ -91,6 +94,7 @@ public:
 public slots:
     void receiveGPSMessage(gpsMessage m);
     void handleErrorMessage(QString);
+    void handleStatusMessage(QString);
 
 signals:
     void connectToGPS(QString host, int port, QString binaryLogFilename);
@@ -112,6 +116,8 @@ private slots:
     void handleGPSConnectionError(int error);
     void handleGPSConnectionGood();
     void handleGPSTimeout();
+    void handleAutoReconnectTimer();
+    void handleAutoConnectionCycleTimer();
     void on_connectBtn_clicked();
 
     void on_disconnectBtn_clicked();
