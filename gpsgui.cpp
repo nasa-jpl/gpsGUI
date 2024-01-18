@@ -626,6 +626,7 @@ void GpsGui::preparePlots()
     {
         timeAxis[i-1] = t++;
     }
+    bool darkPlotColors = true;
 
     // Add graph 0:
 
@@ -677,12 +678,12 @@ void GpsGui::preparePlots()
     setTimeAxis(ui->plotHeading->xAxis);
 
     // titles:
-    setPlotTitle(ui->plotLatLong, QString("Latitude and Longitude"));
-    setPlotTitle(ui->plotAltitude, QString("Altitude above MSL"));
-    setPlotTitle(ui->plotSpeed, QString("Speed: X,Y,Z and Ground"));
-    setPlotTitle(ui->plotPitch, QString("Pitch"));
-    setPlotTitle(ui->plotRoll, QString("Roll"));
-    setPlotTitle(ui->plotHeading, QString("Heading (Mag, Course)"));
+    setPlotTitle(ui->plotLatLong, QString("Latitude and Longitude"), darkPlotColors);
+    setPlotTitle(ui->plotAltitude, QString("Altitude above MSL"), darkPlotColors);
+    setPlotTitle(ui->plotSpeed, QString("Speed: X,Y,Z and Ground"), darkPlotColors);
+    setPlotTitle(ui->plotPitch, QString("Pitch"), darkPlotColors);
+    setPlotTitle(ui->plotRoll, QString("Roll"), darkPlotColors);
+    setPlotTitle(ui->plotHeading, QString("Heading (Mag, Course)"), darkPlotColors);
 
     // set labels:
 
@@ -708,26 +709,38 @@ void GpsGui::preparePlots()
     ui->plotSpeed->legend->setBrush(QColor("#85ffffff")); // 85% opaque white
     ui->plotSpeed->legend->setVisible(true);
 
-    setPlotColors(ui->plotHeading, false);
+
+    setPlotColors(ui->plotLatLong, darkPlotColors);
+    setPlotColors(ui->plotAltitude, darkPlotColors);
+    setPlotColors(ui->plotSpeed, darkPlotColors);
+    setPlotColors(ui->plotPitch, darkPlotColors);
+    setPlotColors(ui->plotRoll, darkPlotColors);
+    setPlotColors(ui->plotHeading, darkPlotColors);
 
 }
 
-void GpsGui::setPlotTitle(QCustomPlot *p, QString title)
+void GpsGui::setPlotTitle(QCustomPlot *p, QString title, bool darkMode)
 {
-
     p->plotLayout()->insertRow(0);
-
 #if QCUSTOMPLOT_VERSION < 0x020001
-
     // Earlier QCP versions:
-    p->plotLayout()->addElement(0, 0, new QCPPlotTitle(p, title));
+    QCPTextElement *t = new QCPPlotTitle(p, title);
+    if(darkMode) {
+        t->setTextColor(Qt::white);
+    } else {
+        t->setTextColor(Qt::black);
+    }
+    p->plotLayout()->addElement(0, 0, t);
 #else
-
     // QCP 2.0:
-    p->plotLayout()->addElement(0, 0, new QCPTextElement(p, title, QFont("sans", 8, QFont::Bold)));
+    QCPTextElement *t = new QCPTextElement(p, title, QFont("sans", 8, QFont::Bold));
+    if(darkMode) {
+        t->setTextColor(Qt::white);
+    } else {
+        t->setTextColor(Qt::black);
+    }
+    p->plotLayout()->addElement(0, 0, t);
 #endif
-
-
 }
 
 void GpsGui::setTimeAxis(QCPAxis *x)
@@ -746,8 +759,21 @@ void GpsGui::setPlotColors(QCustomPlot *p, bool dark)
         p->xAxis->setTickPen(QPen(Qt::yellow));
         p->yAxis->setTickPen(QPen(Qt::yellow));
         p->xAxis->setLabelColor(QColor(Qt::white));
+        p->yAxis->setLabelColor(Qt::white);
         p->yAxis->setLabelColor(QColor(Qt::white));
+        p->yAxis->setTickLabelColor(Qt::white);
+        p->xAxis->setTickLabelColor(Qt::white);
         p->graph()->setPen(QPen(Qt::red));
+        if(p->graphCount() > 1) {
+            QVector<QColor> rainbow = makeColors(p->graphCount());
+            for(int pn=0; pn < p->graphCount(); pn++)
+            {
+                p->graph(pn)->setPen(rainbow.at(pn));
+                p->graph(pn)->setBrush(QColor("#00000000")); // transparent fill, ie, none
+            }
+        }
+        p->legend->setBrush(QColor("#19000000")); // black
+        p->legend->setTextColor(Qt::white);
         //p->graph()->setBrush(QBrush(Qt::yellow)); // sets an underfill for the line
     } else {
         p->setBackground(QBrush(Qt::white));
@@ -990,6 +1016,8 @@ void GpsGui::on_connectBtn_clicked()
     {
         binaryLogFilename = "/tmp/gpsbinary--DEFAULT--.log";
     }
+    // Nominal binary log file growth is 76.6 kilobytes/sec
+    // which is 6.3 gigabytes per day
     emit connectToGPS(ui->gpsHostEdit->text(), ui->gpsPort->text().toInt(), binaryLogFilename);
     gnssStatusTime.restart();
 }
@@ -1093,7 +1121,7 @@ void GpsGui::on_selFileBtn_clicked()
     }
 
     filename = QFileDialog::getOpenFileName(this,
-                                            tr("Open Binary GPS Log"), filename, tr("Log Files (*)"));
+                tr("Open Binary GPS Log"), filename, tr("Log Files (*)"));
     if(!filename.isEmpty())
     {
         ui->gpsBinLogOpenEdit->setText(filename);

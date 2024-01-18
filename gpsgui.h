@@ -15,6 +15,8 @@
 #include <qcustomplot.h>
 #endif
 
+#include "plotcolors.h"
+
 #include "gpsnetwork.h"
 #include "gpsbinaryreader.h"
 #include "gpsbinaryfilereader.h"
@@ -71,7 +73,7 @@ class GpsGui : public QMainWindow
     void preparePlots();
     void updatePlots();
     void setTimeAxis(QCPAxis *x);
-    void setPlotTitle(QCustomPlot *p, QString title);
+    void setPlotTitle(QCustomPlot *p, QString title, bool darkMode);
 
     void setPlotColors(QCustomPlot *p, bool dark);
 
