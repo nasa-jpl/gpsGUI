@@ -11,10 +11,7 @@ GpsGui::GpsGui(QWidget *parent)
     ui->debugBtn->setEnabled(false);
     ui->debugBtn->setVisible(false);
 #endif
-
-#ifdef __APPLE__
     ui->gpsBinLogOpenEdit->setText(QDir::homePath());
-#endif
 
     vecSize = 450;
     msgsReceivedCount = 0;
@@ -1088,14 +1085,15 @@ void GpsGui::on_clearErrorBtn_clicked()
 void GpsGui::on_selFileBtn_clicked()
 {
     QString filename;
-#ifdef __APPLE__
-    filename = QFileDialog::getOpenFileName(this,
-                                            tr("Open Binary GPS Log"), QDir::homePath(), tr("Log Files (*)"));
-#else
-    filename = QFileDialog::getOpenFileName(this,
-                                            tr("Open Binary GPS Log"), "/home", tr("Log Files (*)"));
-#endif
 
+    if(ui->gpsBinLogOpenEdit->text().isEmpty()) {
+      filename = QDir::homePath();
+    } else {
+        filename = ui->gpsBinLogOpenEdit->text();
+    }
+
+    filename = QFileDialog::getOpenFileName(this,
+                                            tr("Open Binary GPS Log"), filename, tr("Log Files (*)"));
     if(!filename.isEmpty())
     {
         ui->gpsBinLogOpenEdit->setText(filename);
