@@ -766,11 +766,20 @@ void GpsGui::setPlotColors(QCustomPlot *p, bool dark)
         p->graph()->setPen(QPen(Qt::red));
         if(p->graphCount() > 1) {
             QVector<QColor> rainbow = makeColors(p->graphCount());
+            QPen pen;
             for(int pn=0; pn < p->graphCount(); pn++)
             {
                 p->graph(pn)->setPen(rainbow.at(pn));
+                pen = p->graph(pn)->pen();
+                pen.setWidth(2);
+                p->graph(pn)->setPen(pen);
                 p->graph(pn)->setBrush(QColor("#00000000")); // transparent fill, ie, none
             }
+        } else {
+            p->graph()->setPen(QPen(Qt::red));
+            QPen penset = p->graph()->pen();
+            penset.setWidth(2);
+            p->graph()->setPen(penset);
         }
         p->legend->setBrush(QColor("#19000000")); // black
         p->legend->setTextColor(Qt::white);
