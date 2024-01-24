@@ -88,6 +88,11 @@ void gpsBinaryLogger::setupBuffer()
 
 void gpsBinaryLogger::openFileWriting()
 {
+    // GSE Logging:
+    if(fileIsOpen) {
+        closeFileWriting();
+    }
+
     if(!fileIsOpen)
     {
         if(filename.isEmpty())

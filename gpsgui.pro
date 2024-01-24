@@ -43,7 +43,8 @@ HEADERS += \
     gpsnetwork.h \
     mapview.h \
     plotcolors.h \
-    qledlabel.h
+    qledlabel.h \
+    startupoptions.h
 
 macx:HEADERS += qcustomplot-source/qcustomplot.h
 

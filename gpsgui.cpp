@@ -1,11 +1,13 @@
 #include "gpsgui.h"
 #include "ui_gpsgui.h"
 
-GpsGui::GpsGui(QWidget *parent)
+GpsGui::GpsGui(startupOptions_t options, QWidget *parent)
     : QMainWindow(parent)
     , ui(new Ui::GpsGui)
 {
     ui->setupUi(this);
+
+    this->options = options;
 
 #ifndef QT_DEBUG
     ui->debugBtn->setEnabled(false);
@@ -93,8 +95,6 @@ GpsGui::GpsGui(QWidget *parent)
     connect(this, SIGNAL(setGPSReplaySpeedupFactor(int)), fileReader, SLOT(setSpeedupFactor(int)));
     replayThread->start();
 
-    ui->gpsPort->setValidator( new QIntValidator(0,65535,this) );
-
     gpsMessageHeartbeat.setInterval(500); // half second, expected is 5ms.
 
     connect(&gpsMessageHeartbeat, SIGNAL(timeout()), this, SLOT(handleGPSTimeout()));
@@ -107,6 +107,11 @@ GpsGui::GpsGui(QWidget *parent)
     reconnectTimer.setInterval(1000); // reconnect one second after connection lost
     reconnectTimer.setSingleShot(true);
     connect(&reconnectTimer, SIGNAL(timeout()), this, SLOT(handleAutoReconnectTimer()));
+    connect(&connectionCycleTimer, SIGNAL(timeout()), this, SLOT(handleAutoConnectionCycleTimer()));
+
+    if(options.automaticMode) {
+        on_connectBtn_clicked();
+    }
 }
 
 GpsGui::~GpsGui()
@@ -130,13 +135,14 @@ void GpsGui::showStatusMessage(QString s)
 void GpsGui::handleGPSStatusMessage(QString message)
 {
     showStatusMessage(message);
-    ui->logViewer->appendPlainText(message);
+    handleStatusMessage(message);
 }
 
 void GpsGui::handleGPSDataString(QString gpsString)
 {
     //showStatusMessage(gpsString);
-    ui->logViewer->appendPlainText(gpsString);
+    //ui->logViewer->appendPlainText(gpsString);
+    handleStatusMessage(gpsString);
 }
 
 void GpsGui::receiveGPSMessage(gpsMessage m)
@@ -842,6 +848,38 @@ void GpsGui::setupUI()
     ui->zuptValidSticky->setSizeCustom(ledSize);
     ui->altitudeRejectedStatus->setSizeCustom(ledSize);
     ui->altitudeRejectedSticky->setSizeCustom(ledSize);
+
+    ui->gpsPort->setValidator( new QIntValidator(0,65535,this) );
+
+    if(options.haveGPSPort) {
+        ui->gpsPort->setText(QString("%1").arg(options.gpsPort));
+    }
+
+    if(options.haveGPSIPAddress) {
+        ui->gpsHostEdit->setText(options.gpsIP);
+    }
+
+    if(options.haveLoggingInterval) {
+        ui->connectionCycleSpin->setValue(options.loggingIntervalMinutes);
+    }
+
+    if(options.haveDataStorageLocation) {
+        ui->gpsBinLogEdit->setText(options.dataStorageLocation);
+    }
+
+    if(options.handleZupt) {
+        ui->setZuPTAutoChk->setChecked(true);
+    }
+
+    if(options.logWithInterval) {
+        ui->connectionCycleCheckbox->setChecked(true);
+        ui->filenameIsPrefixOnlyChk->setChecked(true);
+    }
+
+    if(options.automaticMode) {
+        ui->autoReconnectChk->setChecked(true);
+    }
+
 }
 
 void GpsGui::updatePlots()
@@ -1029,6 +1067,14 @@ void GpsGui::handleAutoReconnectTimer() {
     reconnectTimer.stop();
 }
 
+QString GpsGui::makeFilename(QString basis) {
+
+    QDateTime t = QDateTime::currentDateTimeUtc();
+    basis.append(t.toString("yyyyMMdd-hhmmss"));
+    basis.append(".log");
+    return basis;
+}
+
 void GpsGui::on_connectBtn_clicked()
 {
     QString binaryLogFilename = ui->gpsBinLogEdit->text();
@@ -1036,6 +1082,11 @@ void GpsGui::on_connectBtn_clicked()
     {
         binaryLogFilename = "/tmp/gpsbinary--DEFAULT--.log";
     }
+
+    if(ui->filenameIsPrefixOnlyChk->isChecked()) {
+        binaryLogFilename = makeFilename(binaryLogFilename);
+    }
+
     // Nominal binary log file growth is 76.6 kilobytes/sec
     // which is 6.3 gigabytes per day
     emit connectToGPS(ui->gpsHostEdit->text(), ui->gpsPort->text().toInt(), binaryLogFilename);
@@ -1094,14 +1145,21 @@ void GpsGui::handleGPSTimeout()
 
 void GpsGui::handleAutoConnectionCycleTimer() {
     // disconnect, reconnect
+    handleStatusMessage("Cycling GPS connection.");
+    this->on_disconnectBtn_clicked();
+    this->on_connectBtn_clicked();
 }
 
 void GpsGui::handleErrorMessage(QString errorMessage)
 {
+    QDateTime t = QDateTime::currentDateTimeUtc();
+    errorMessage.prepend(t.toString("yyyyMMdd--hh:mm:ss: "));
     ui->logViewer->appendPlainText(errorMessage);
 }
 
 void GpsGui::handleStatusMessage(QString s) {
+    QDateTime t = QDateTime::currentDateTimeUtc();
+    s.prepend(t.toString("yyyyMMdd--hh:mm:ss: "));
     ui->logViewer->appendPlainText(s);
 }
 
@@ -1265,3 +1323,17 @@ void GpsGui::on_replayEnabledMainChk_toggled(bool checked)
 {
     fileReader->paused = !checked;
 }
+
+void GpsGui::on_connectionCycleCheckbox_clicked(bool checked)
+{
+    if(checked) {
+        int intervalms = ui->connectionCycleSpin->value()*60*1000;
+        connectionCycleTimer.setInterval(intervalms);
+        connectionCycleTimer.setSingleShot(false);
+        connectionCycleTimer.start();
+        handleStatusMessage(QString("Starting automatic connection cycle timer with interval %1 minutes (%2 ms).").arg(ui->connectionCycleSpin->value()).arg(intervalms));
+    } else {
+        connectionCycleTimer.stop();
+    }
+}
+

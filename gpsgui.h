@@ -15,8 +15,8 @@
 #include <qcustomplot.h>
 #endif
 
+#include "startupoptions.h"
 #include "plotcolors.h"
-
 #include "gpsnetwork.h"
 #include "gpsbinaryreader.h"
 #include "gpsbinaryfilereader.h"
@@ -88,7 +88,7 @@ class GpsGui : public QMainWindow
     void showStatusMessage(QString);
 
 public:
-    GpsGui(QWidget *parent = nullptr);
+    GpsGui(startupOptions_t options, QWidget *parent = nullptr);
     ~GpsGui();
 
 public slots:
@@ -118,6 +118,7 @@ private slots:
     void handleGPSTimeout();
     void handleAutoReconnectTimer();
     void handleAutoConnectionCycleTimer();
+    QString makeFilename(QString basis);
     void on_connectBtn_clicked();
 
     void on_disconnectBtn_clicked();
@@ -148,6 +149,8 @@ private slots:
 
     void on_replayEnabledMainChk_toggled(bool checked);
 
+    void on_connectionCycleCheckbox_clicked(bool checked);
+
 private:
     Ui::GpsGui *ui;
     dword priorAlgorithmStatus1 = 0;
@@ -157,6 +160,7 @@ private:
     dword oldCounter = 0;
 
     uint64_t droppedTotal = 0;
+    startupOptions_t options;
 
     void processGNSSInfo(int num);
 
