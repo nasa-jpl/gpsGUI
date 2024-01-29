@@ -264,6 +264,7 @@ void gpsBinaryReader::processData()
 
     if( (m.extendedNavDataBlockBitmask != 0x00000007) && ( m.extendedNavDataBlockBitmask!= 0x00000000) )
     {
+        // TODO: Remove this
         foundErrors = true;
         decodeInvalid = true;
         m.validDecode = false;
