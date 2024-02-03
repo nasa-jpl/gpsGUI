@@ -5,7 +5,7 @@ zupt::zupt(QObject *parent)
 {
     socket = new QTcpSocket(this);
     connect(socket, SIGNAL(connected()), this, SLOT(connectedToHost()));
-    connect(socket, SIGNAL(disconnected()), this, SLOT(disconnectedFromHost()));
+    connect(socket, SIGNAL(disconnected()), this, SLOT(disconnectFromHost()));
     connect(socket, SIGNAL(readyRead()), this, SLOT(handleDataFromHost()));
 #if (QT_VERSION >= QT_VERSION_CHECK(6,0,0))
     connect(socket, SIGNAL(errorOccurred(QAbstractSocket::SocketError)), this, SLOT(handleHostError(QAbstractSocket::SocketError)));
