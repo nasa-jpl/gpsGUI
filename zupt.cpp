@@ -13,7 +13,7 @@ zupt::zupt(QObject *parent)
     connect(socket, SIGNAL(error(QAbstractSocket::SocketError)), this, SLOT(handleHostError(QAbstractSocket::SocketError)));
 #endif
 
-    magicZUpT_OFF_text = "$PIXSE,CONFIG,ZUP___,0*41";
+    magicZUpT_OFF_text = "$PIXSE,CONFIG,ZUP___,0*41\r\n";
     ready = true;
 }
 
