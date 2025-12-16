@@ -791,7 +791,7 @@ long gpsBinaryReader::makeLong(QByteArray d, uint16_t startPos)
 {
     // Signed 32-Bit Int
     dataPos +=4;
-    return (unsigned char)d.at(startPos+3) | ((unsigned char)d.at(startPos+2) << 8) | ((unsigned char)d.at(startPos+1) << 16) | ((unsigned char)d.at(startPos+3) << 24);
+    return (unsigned char)d.at(startPos+3) | ((unsigned char)d.at(startPos+2) << 8) | ((unsigned char)d.at(startPos+1) << 16) | ((unsigned char)d.at(startPos+0) << 24);
 }
 
 float gpsBinaryReader::makeFloat(QByteArray d, uint16_t startPos)

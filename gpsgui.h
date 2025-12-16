@@ -169,6 +169,14 @@ private:
     void resetLEDs();
     void setupUI();
 
+    FILE* sfilep = NULL;
+    void startLog();
+    void logData(QString s1, QString s2,
+                 QString s3,
+                 QString s4,
+                 QString s5,
+                 QString s6, QString s7, QString s8, QString s9);
+
     // Sticky is true when in error or warning mode.
     // Sticky is false when in good mode.
 

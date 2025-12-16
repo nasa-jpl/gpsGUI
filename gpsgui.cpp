@@ -6,7 +6,9 @@ GpsGui::GpsGui(startupOptions_t options, QWidget *parent)
     , ui(new Ui::GpsGui)
 {
     ui->setupUi(this);
-
+#ifdef QT_DEBUG
+    startLog();
+#endif
     this->options = options;
 
 #ifndef QT_DEBUG
@@ -123,6 +125,13 @@ GpsGui::~GpsGui()
 
     gpsThread->quit();
     gpsThread->wait();
+
+#ifdef QT_DEBUG
+    if(sfilep) {
+        fclose(sfilep);
+        sfilep = NULL;
+    }
+#endif
 
     delete ui;
 }
@@ -382,6 +391,60 @@ void GpsGui::receiveGPSMessage(gpsMessage m)
         if(m.haveGNSSInfo1)
         {
             processGNSSInfo(1);
+#ifdef QT_DEBUG
+            // Fields to log:
+
+            gnssInfo *g = &m.gnss[0];
+            if(g->populated) {
+                uint64_t tN = m.navDataValidityTime;
+                int hourN = tN / ((float)1E4)/60.0/60.0;
+                int minuteN = ( tN / ((float)1E4)/60.0 ) - (hourN*60) ;
+                float secondN = ( tN / ((double)1E4) ) - (hourN*60*60) - (minuteN*60);
+                //volatile float secondNN = ( tN / ((float)1E4) );
+                QString tNstr = QString("%1:%2:%3 UTC").arg(hourN, 2, 10, QChar('0')).arg(minuteN, 2, 10, QChar('0')).arg(secondN, 6, 'f', 3, QChar('0'));
+
+                long tG = g->gnssDataValidityTime;
+                int hourG = tG / ((float)1E4)/60.0/60.0;
+                int minuteG = ( tG / ((float)1E4)/60.0 ) - (hourG*60) ;
+                float secondG = ( tG / ((double)1E4) ) - (hourG*60*60) - (minuteG*60);
+                //volatile float secondGG = ( tG / ((float)1E4) );
+
+                QString tGstr = QString("%1:%2:%3 UTC").arg(hourG, 2, 10, QChar('0')).arg(minuteG, 2, 10, QChar('0')).arg(secondG, 6, 'f', 3, QChar('0'));
+                QString checkthis = QString("%1").arg(secondG, 6, 'f', 3, QChar('0'));
+                if( !checkthis.endsWith("000") ) {
+                    abort();
+                }
+                uint64_t deltaTG = tN-tG;
+
+                float t1 = m.meanTempACC;
+                if(!m.haveTempData) {
+                    t1=0;
+                }
+
+                uint64_t tU = m.UTCdataValidityTime;
+                int hourU = tU / ((float)1E4)/60.0/60.0;
+                int minuteU = ( tU / ((float)1E4)/60.0 ) - (hourU*60) ;
+                float secondU = ( tU / ((double)1E4) ) - (hourU*60.0*60.0) - (minuteU*60.0);
+                //volatile float secondUU = ( tU / ((float)1E4) );
+                QString timeU = QString("%1:%2:%3 UTC").arg(hourU, 2, 10, QChar('0')).arg(minuteU, 2, 10, QChar('0')).arg(secondU, 6, 'f', 3, QChar('0'));
+
+                if(!m.haveUTC) {
+                    tU=0;
+                    timeU="NO_UTC";
+                }
+
+                QString count = QString("%1").arg(m.counter);
+
+                logData(count,
+                        tGstr,  QString("%1").arg(tG)  ,
+                        tNstr,  QString("%1").arg(tN)  ,
+                        timeU,  QString("%1").arg(tU)  ,
+                        QString("%1").arg(deltaTG),
+                        QString("%1").arg(t1, 0, 'f', 10)
+                        );
+            }
+#endif
+
         }
         if(m.haveGNSSInfo2)
         {
@@ -598,11 +661,15 @@ void GpsGui::receiveGPSMessage(gpsMessage m)
         int hourN = tN / ((float)1E4)/60.0/60.0;
         int minuteN = ( tN / ((float)1E4)/60.0 ) - (hourN*60) ;
         float secondN = ( tN / ((float)1E4) ) - (hourN*60.0*60.0) - (minuteN*60.0);
+        QString tNstr = QString("%1:%2:%3 UTC").arg(hourN, 2, 10, QChar('0')).arg(minuteN, 2, 10, QChar('0')).arg(secondN, 6, 'f', 3, QChar('0'));
 
         float deltaT = 0.0;
         deltaT = secondN - secondD; // navValidTime - utcDataValidityTime
         //qDebug() << "Seconds N: " << QString("%1").arg(secondN, 0, 'f', 10) << ", Seconds D: " << secondD << ", DeltaT: " << QString("%1").arg(deltaT, 0, 'f', 10) << "Counter: " << m.counter << "Old Counter: " << oldCounter << "DeltaCounter: " << m.counter-oldCounter;
         ui->deltaTimeLabel->setText(QString("%1").arg(deltaT, 0, 'f', 10));
+#ifdef QT_DEBUG
+        // logData(time, tNstr, QString("%1").arg(deltaT, 0, 'f', 10));
+#endif
         oldCounter = m.counter;
     }
 
@@ -880,6 +947,27 @@ void GpsGui::setupUI()
         ui->autoReconnectChk->setChecked(true);
     }
 
+}
+
+void GpsGui::startLog() {
+    sfilep = fopen("/tmp/timelog.txt", "a");
+    if(!sfilep) {
+        abort();
+    }
+}
+
+void GpsGui::logData(QString s1, QString s2, QString s3,
+                     QString s4, QString s5, QString s6,
+                     QString s7, QString s8, QString s9) {
+    if(!sfilep) {
+        return;
+    }
+    QString s = QString("%1, %2, %3, %4, %5, %6, %7, %8, %9\n")
+            .arg(s1).arg(s2).arg(s3).arg(s4).arg(s5)
+            .arg(s6).arg(s7).arg(s8).arg(s9);
+
+    fprintf(sfilep, s.toLocal8Bit());
+    fflush(sfilep);
 }
 
 void GpsGui::updatePlots()
