@@ -63,10 +63,12 @@ void gpsBinaryReader::processData()
 {
     mtx.lock();
 
-    if(rawData.size() < 392) {
+    // if serial, allow for smaller sizes
+    // if network, expect >= 392
+    if(rawData.size() < 300) {
         m.validDecode = false;
         decodeInvalid = true;
-        copyQStringToCharArray( m.lastDecodeErrorMessage, QString("Array too small to contain gps data. Rejected.") );
+        copyQStringToCharArray( m.lastDecodeErrorMessage, QString("Array too small (%1 bytes) to contain gps data. Rejected.").arg(rawData.size()) );
         mtx.unlock();
         return;
     }

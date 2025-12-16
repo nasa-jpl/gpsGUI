@@ -17,7 +17,7 @@
 
 #include "startupoptions.h"
 #include "plotcolors.h"
-#include "gpsnetwork.h"
+#include "gpscomms.h"
 #include "gpsbinaryreader.h"
 #include "gpsbinaryfilereader.h"
 #include "mapview.h"
@@ -31,7 +31,7 @@ class GpsGui : public QMainWindow
     Q_OBJECT
 
     QThread *gpsThread;
-    gpsNetwork *gps;
+    gpsComms *gps;
     gpsMessage m;
     gpsBinaryFileReader *fileReader;
     QThread *replayThread;
@@ -97,7 +97,8 @@ public slots:
     void handleStatusMessage(QString);
 
 signals:
-    void connectToGPS(QString host, int port, QString binaryLogFilename);
+    void connectToGPSNetwork(QString host, int port, QString binaryLogFilename);
+    void connectToGPSSerial(QString serialPort, int baudRate, QString binaryLogFilename);
     void disconnectFromGPS();
     void getDebugInfo();
     void setBinaryLogFilename(QString binlogname);
@@ -151,6 +152,10 @@ private slots:
 
     void on_connectionCycleCheckbox_clicked(bool checked);
 
+    void on_gcontypeNetwork_clicked(bool checked);
+
+    void on_gcontypeSerial_clicked(bool checked);
+
 private:
     Ui::GpsGui *ui;
     dword priorAlgorithmStatus1 = 0;
@@ -161,6 +166,8 @@ private:
 
     uint64_t droppedTotal = 0;
     startupOptions_t options;
+
+    gpsComms::ConnectionType connectionType = gpsComms::Network;
 
     void processGNSSInfo(int num);
 

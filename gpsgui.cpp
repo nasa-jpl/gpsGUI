@@ -59,7 +59,7 @@ GpsGui::GpsGui(startupOptions_t options, QWidget *parent)
 
     qRegisterMetaType<gpsMessage>();
 
-    gps = new gpsNetwork();
+    gps = new gpsComms();
     gpsThread = new QThread(this);
 
     gps->moveToThread(gpsThread);
@@ -72,7 +72,8 @@ GpsGui::GpsGui(startupOptions_t options, QWidget *parent)
     connect(replayThread, &QThread::finished, fileReader, &QObject::deleteLater);
 
 
-    connect(this, SIGNAL(connectToGPS(QString,int,QString)), gps, SLOT(connectToGPS(QString,int,QString)));
+    connect(this, SIGNAL(connectToGPSNetwork(QString,int,QString)), gps, SLOT(connectToGPSNetwork(QString,int,QString)));
+    connect(this, SIGNAL(connectToGPSSerial(QString,int,QString)), gps, SLOT(connectToGPSSerial(QString,int,QString)));
     connect(this, SIGNAL(disconnectFromGPS()), gps, SLOT(disconnectFromGPS()));
     connect(this, SIGNAL(getDebugInfo()), gps, SLOT(debugThis()));
     connect(gps, SIGNAL(haveGPSString(QString)), this, SLOT(handleGPSDataString(QString)));
@@ -97,7 +98,7 @@ GpsGui::GpsGui(startupOptions_t options, QWidget *parent)
     connect(this, SIGNAL(setGPSReplaySpeedupFactor(int)), fileReader, SLOT(setSpeedupFactor(int)));
     replayThread->start();
 
-    gpsMessageHeartbeat.setInterval(500); // half second, expected is 5ms.
+    gpsMessageHeartbeat.setInterval(5000); // half second, expected is 5ms.
 
     connect(&gpsMessageHeartbeat, SIGNAL(timeout()), this, SLOT(handleGPSTimeout()));
 
@@ -1175,10 +1176,23 @@ void GpsGui::on_connectBtn_clicked()
         binaryLogFilename = makeFilename(binaryLogFilename);
     }
 
-    // Nominal binary log file growth is 76.6 kilobytes/sec
+    // Nominal network binary log file growth is 76.6 kilobytes/sec
     // which is 6.3 gigabytes per day
-    emit connectToGPS(ui->gpsHostEdit->text(), ui->gpsPort->text().toInt(), binaryLogFilename);
+    if(connectionType == gpsComms::Network) {
+        handleStatusMessage("Issuing command to connect to GPS via Network");
+        emit connectToGPSNetwork(ui->gpsHostEdit->text(),
+                                 ui->gpsPort->text().toInt(),
+                                 binaryLogFilename);
+    } else if (connectionType == gpsComms::Serial) {
+        handleStatusMessage("Issuing command to connect to GPS via Serial");
+        emit connectToGPSSerial(ui->serialPortNameEdit->text(),
+                                ui->serialBaud->text().toInt(),
+                                binaryLogFilename);
+    } else {
+        handleErrorMessage("Unknown type of gps connection has been specified.");
+    }
     gnssStatusTime.restart();
+    gpsMessageHeartbeat.start();
 }
 
 void GpsGui::on_disconnectBtn_clicked()
@@ -1249,6 +1263,9 @@ void GpsGui::handleStatusMessage(QString s) {
     QDateTime t = QDateTime::currentDateTimeUtc();
     s.prepend(t.toString("yyyyMMdd--hh:mm:ss: "));
     ui->logViewer->appendPlainText(s);
+#ifdef QT_DEBUG
+    qDebug() << s;
+#endif
 }
 
 void GpsGui::on_clearErrorBtn_clicked()
@@ -1422,6 +1439,28 @@ void GpsGui::on_connectionCycleCheckbox_clicked(bool checked)
         handleStatusMessage(QString("Starting automatic connection cycle timer with interval %1 minutes (%2 ms).").arg(ui->connectionCycleSpin->value()).arg(intervalms));
     } else {
         connectionCycleTimer.stop();
+    }
+}
+
+void GpsGui::on_gcontypeNetwork_clicked(bool checked)
+{
+    ui->serialPortNameEdit->setEnabled(!checked);
+    ui->serialBaud->setEnabled(!checked);
+    ui->gpsHostEdit->setEnabled(checked);
+    if(checked) {
+        connectionType = gpsComms::Network;
+        gpsMessageHeartbeat.setInterval(500); // nominally every 5ms
+    }
+}
+
+void GpsGui::on_gcontypeSerial_clicked(bool checked)
+{
+    ui->serialPortNameEdit->setEnabled(checked);
+    ui->serialBaud->setEnabled(checked);
+    ui->gpsHostEdit->setEnabled(!checked);
+    if(checked) {
+        connectionType = gpsComms::Serial;
+        gpsMessageHeartbeat.setInterval(4000); // nominally every 1000ms
     }
 }
 

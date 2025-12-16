@@ -3,6 +3,7 @@ QT       += core gui network svg
 greaterThan(QT_MAJOR_VERSION, 4): QT += widgets
 QT += printsupport
 QT += quickwidgets
+QT += serialport
 
 CONFIG += c++11
 
@@ -27,7 +28,7 @@ SOURCES += \
     gpsbinaryfilereader.cpp \
     gpsbinarylogger.cpp \
     gpsbinaryreader.cpp \
-    gpsnetwork.cpp \
+    gpscomms.cpp \
     main.cpp \
     gpsgui.cpp \
     mapview.cpp \
@@ -40,7 +41,7 @@ HEADERS += \
     gpsbinarylogger.h \
     gpsbinaryreader.h \
     gpsgui.h \
-    gpsnetwork.h \
+    gpscomms.h \
     mapview.h \
     plotcolors.h \
     qledlabel.h \
