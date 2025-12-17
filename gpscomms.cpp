@@ -93,6 +93,7 @@ void gpsComms::disconnectFromGPS()
         if(serialport->isOpen()) {
             emit statusMessage("Closing GPS serial connection.");
             serialport->close();
+            serialReadBuffer.clear();
         }
     } else {
         emit statusMessage("Unsure how to close GPS connection for unknown connection type.");
@@ -225,6 +226,10 @@ void gpsComms::readData()
         }
         dataReadFromDevice = serialReadBuffer;
         serialReadBuffer.clear();
+
+#ifdef QT_DEBUG
+            emit statusMessage(QString("Serial data buffer is %1 bytes. Handing data to decoder now.").arg(dataReadFromDevice.length()));
+#endif
     }
 
     data = deepCopyData(dataReadFromDevice);

@@ -184,10 +184,19 @@ void GpsGui::receiveGPSMessage(gpsMessage m)
         //firstMessage = false; // set at end of function.
     }
 
-    bool doPlotUpdate = ((msgsReceivedCount%40)==0) && ui->drawWidgetsChk->isChecked();
-    bool doWidgetPaint = ((msgsReceivedCount%51)==0) && ui->drawWidgetsChk->isChecked();
-    bool doLabelUpdate = (msgsReceivedCount%10)==0;
-    bool doMapUpdate = ((msgsReceivedCount%50)==0) && ui->drawWidgetsChk->isChecked();
+    // Serial connection data is so slow that we need to update each time
+    bool doPlotUpdate = true;
+    bool doWidgetPaint = true;
+    bool doLabelUpdate = true;
+    bool doMapUpdate = true;
+
+    if(connectionType == gpsComms::Network) {
+        // messages come in 200x per second, so we go a little slower here.
+        doPlotUpdate = ((msgsReceivedCount%40)==0) && ui->drawWidgetsChk->isChecked();
+        doWidgetPaint = ((msgsReceivedCount%51)==0) && ui->drawWidgetsChk->isChecked();
+        doLabelUpdate = (msgsReceivedCount%10)==0;
+        doMapUpdate = ((msgsReceivedCount%50)==0) && ui->drawWidgetsChk->isChecked();
+    }
 
 
     gpsMessageHeartbeat.start();
