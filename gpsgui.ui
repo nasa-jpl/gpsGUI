@@ -1580,6 +1580,9 @@
           </item>
           <item>
            <widget class="QLineEdit" name="serialBaud">
+            <property name="enabled">
+             <bool>false</bool>
+            </property>
             <property name="minimumSize">
              <size>
               <width>75</width>

@@ -1456,6 +1456,7 @@ void GpsGui::on_gcontypeNetwork_clicked(bool checked)
     ui->serialPortNameEdit->setEnabled(!checked);
     ui->serialBaud->setEnabled(!checked);
     ui->gpsHostEdit->setEnabled(checked);
+    ui->gpsPort->setEnabled(checked);
     if(checked) {
         connectionType = gpsComms::Network;
         gpsMessageHeartbeat.setInterval(500); // nominally every 5ms
@@ -1467,6 +1468,7 @@ void GpsGui::on_gcontypeSerial_clicked(bool checked)
     ui->serialPortNameEdit->setEnabled(checked);
     ui->serialBaud->setEnabled(checked);
     ui->gpsHostEdit->setEnabled(!checked);
+    ui->gpsPort->setEnabled(!checked);
     if(checked) {
         connectionType = gpsComms::Serial;
         gpsMessageHeartbeat.setInterval(4000); // nominally every 1000ms
